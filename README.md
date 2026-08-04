@@ -19,7 +19,6 @@ Developed by **Shayne M. Mwaniki**
 ## Features
 
 - 🔐 **Accounts & sessions** — sign up / sign in; session is saved to localStorage; all project data persists and restores on login
-- 🔒 **Prototype+ plan** — premium features (AI assist, export, recording) are gated; use the code `UPDATEREAL` to unlock Prototype+ free
 - 🎵 **Background music** — three ambient tracks (Cosmic Drift · Deep Orbit · Silence), fully synthesised with Web Audio; swap tracks in Settings or upload your own
 - 🔍 **Enlarge view** — every studio has an Enlarge button to full-screen your work
 
