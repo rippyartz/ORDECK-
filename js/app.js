@@ -40,20 +40,19 @@ window.addEventListener('popstate',function(e){
   }
 });
 
-// On first load: always start with splash so the app initialises.
-// After splash transitions to auth, auth checks session and goes to home if logged in.
-// Deep-link routing (e.g. /studio/tidal-beat) is applied AFTER the user is logged in
-// by storing the intended path and restoring it post-login.
+// On first load, route to the correct screen based on URL
 (function(){
-  const path = window.location.pathname;
-  const id   = ROUTE_SCREENS[path];
-  // If there's a deep link target that isn't home/auth/splash, store it
-  if (id && id !== 's-home' && id !== 's-auth' && id !== 's-splash' && id !== 's-tutorial') {
-    try { sessionStorage.setItem('ordeck_deeplink', id); } catch(e){}
-  }
-  // Always reset to splash path on load so history is clean
-  if (path !== '/' && path !== '/home') {
-    try { history.replaceState({screen:'s-splash'}, '', '/'); } catch(e){}
+  const path=window.location.pathname;
+  const id=ROUTE_SCREENS[path];
+  if(id&&id!=='s-home'){
+    // Defer so app finishes initialising first
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      if(el){
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        el.classList.add('active');
+      }
+    },100);
   }
 })();
 
@@ -111,92 +110,25 @@ function timeAgo(ts){
 })();
 
 // ── SPLASH ──
-function runSplash() {
-  const steps = ['Initialising engine…','Loading audio runtime…','Building UI modules…','Mounting studios…','Almost ready…'];
-  const splashEl = document.getElementById('s-splash');
-  const spI      = document.getElementById('sp-I');
-  const spWord   = document.getElementById('sp-word');
-  const spSub    = document.getElementById('sp-sub');
-  const fill     = document.getElementById('sp-fill');
-  const pct      = document.getElementById('sp-pct');
-  const step     = document.getElementById('sp-step');
-  const dots     = document.querySelectorAll('.sp-dot');
-
-  if (!splashEl) { go('s-auth'); return; }
-
-  // Animate logo in
-  if (spI)    { spI.style.opacity='0'; spI.style.transform='scale(.5)'; setTimeout(() => { spI.style.opacity='1'; spI.style.transform='scale(1)'; }, 150); }
-  if (spWord) { spWord.style.opacity='0'; setTimeout(() => { spWord.style.opacity='1'; }, 480); }
-  if (spSub)  { spSub.style.opacity='0'; setTimeout(() => { spSub.style.opacity='1'; }, 750); }
-  dots.forEach(d => d.classList.add('a'));
-
-  // Progress bar
-  let p = 0, si = 0;
-  const iv = setInterval(() => {
-    p = Math.min(100, p + (p < 60 ? 1.8 : p < 85 ? 1.2 : 0.7));
-    if (fill) fill.style.width = p + '%';
-    if (pct)  pct.textContent  = Math.floor(p) + '%';
-    const ni = Math.min(steps.length - 1, Math.floor(p / 100 * steps.length));
-    if (ni !== si) {
-      si = ni;
-      if (step) { step.style.opacity='0'; setTimeout(() => { if(step){step.textContent=steps[si];step.style.opacity='1';} }, 180); }
-    }
-    if (p >= 100) {
-      clearInterval(iv);
-      setTimeout(() => {
-        splashEl.style.transition = 'opacity .5s ease';
-        splashEl.style.opacity    = '0';
-        setTimeout(() => {
-          splashEl.classList.remove('active');
-          // All go() wrappers are now in place — safe to navigate
-          const target = window._splashTarget || 's-auth';
-          go(target);
-        }, 520);
-      }, 350);
-    }
-  }, 26);
-
-  // Absolute fallback — if still on splash after 7s, force navigate
-  setTimeout(() => {
-    if (splashEl.classList.contains('active')) {
-      clearInterval(iv);
-      splashEl.classList.remove('active');
-      go(window._splashTarget || 's-auth');
-    }
-  }, 7000);
-}
-
-// ── BOOT — runs after ALL code has parsed and all go() wrappers are installed ──
-// window.onload (not DOMContentLoaded) guarantees the entire script has executed
-window.addEventListener('load', function() {
-  // 1. Restore session first so _splashTarget is set before splash ends
-  (function bootAuth() {
-    try {
-      var session = sessionLoad();
-      if (!session) return;
-      var db = dbLoad();
-      var user = db[session.email];
-      if (!user) { sessionClear(); return; }
-      currentUser = user;
-      userPlan = user.plan || 'standard';
-      window._splashTarget = 's-home';
-      applyUserToUI();
-      if (userPlan === 'prototype-plus') applyPrototypePlus();
-      try {
-        var bcast = localStorage.getItem('ordeck-broadcast');
-        if (bcast) setTimeout(function(){ showToast('📢 ' + bcast); }, 4000);
-      } catch(e) {}
-      if (adminUnlocked) {
-        var btn = document.getElementById('admin-home-btn');
-        if (btn) btn.classList.add('visible');
-      }
-    } catch(e) { console.error('bootAuth error:', e); }
-  })();
-
-  // 2. Run the splash animation — all wrappers are in place at this point
-  runSplash();
-});
-
+(function(){
+  const steps=['Initialising engine…','Loading audio runtime…','Building UI modules…','Compiling shaders…','Mounting studios…','Almost ready…'];
+  setTimeout(()=>{const el=document.getElementById('sp-I');if(el){el.style.opacity='1';el.style.transform='scale(1)'}},150);
+  setTimeout(()=>{const el=document.getElementById('sp-word');if(el)el.style.opacity='1'},500);
+  setTimeout(()=>{const el=document.getElementById('sp-sub');if(el)el.style.opacity='1'},800);
+  let p=0,si=0;
+  const fill=document.getElementById('sp-fill');
+  const pct=document.getElementById('sp-pct');
+  const step=document.getElementById('sp-step');
+  const iv=setInterval(()=>{
+    p=Math.min(100,p+(p<60?1.6:p<85?1.1:.7));
+    if(fill)fill.style.width=p+'%';
+    if(pct)pct.textContent=Math.floor(p)+'%';
+    const ni=Math.min(steps.length-1,Math.floor(p/100*steps.length));
+    if(ni!==si){si=ni;if(step){step.style.opacity='0';setTimeout(()=>{step.textContent=steps[si];step.style.opacity='1'},180)}}
+    if(p>=100)clearInterval(iv);
+  },28);
+  setTimeout(()=>go('s-auth'),3400);
+})();
 
 // ── AUTH ──
 function authTab(t){
@@ -232,13 +164,7 @@ function tutNext(){
   const dots=document.querySelectorAll('.tut-dot');
   slides[tutStep].style.display='none';
   tutStep++;
-  if(tutStep>=tutData.length){
-    // Restore any deep-link target from before login
-    let deepLink = null;
-    try { deepLink = sessionStorage.getItem('ordeck_deeplink'); sessionStorage.removeItem('ordeck_deeplink'); } catch(e){}
-    go(deepLink || 's-home');
-    return;
-  }
+  if(tutStep>=tutData.length){go('s-home');return}
   slides[tutStep].style.display='block';
   dots.forEach((d,i)=>d.classList.toggle('on',i<=tutStep));
   document.getElementById('tut-ctr').textContent=(tutStep+1)+' / '+tutData.length;
@@ -2671,7 +2597,26 @@ var currentUser = null; // { email, name, plan, projects, settings, ... }
 function isLoggedIn() { return !!currentUser; }
 function isPremium()  { return currentUser && currentUser.plan === 'prototype-plus'; }
 
-// ── Boot: restore session ──
+// ── Boot: restore session from Supabase or localStorage ──
+(function bootAuth() {
+  // Wait for supabase to load then restore session
+  function tryRestore() {
+    sbGetSession().then(function(user) {
+      if (!user) return;
+      currentUser = user;
+      currentUser._id = user.id || user.email; // supabase uuid or email
+      userPlan = user.plan || 'standard';
+      setTimeout(function() {
+        applyUserToUI();
+        if (userPlan === 'prototype-plus') applyPrototypePlus();
+        homeExploreRender && homeExploreRender();
+        fpPoll && fpPoll();
+      }, 200);
+    }).catch(function(){});
+  }
+  if (window._sb || window._sbOffline) { tryRestore(); }
+  else { window.addEventListener('supabase-ready', tryRestore); }
+})();
 
 // ── Apply user data to UI elements ──
 function applyUserToUI() {
@@ -2695,61 +2640,44 @@ function applyUserToUI() {
 function _doAuth() {
   var isSignUp = document.getElementById('at-up') && document.getElementById('at-up').classList.contains('sel');
   var email, password, name;
+  var submitBtn = document.querySelector('.a-sub');
+  if (submitBtn) { submitBtn.textContent = 'Please wait...'; submitBtn.disabled = true; }
+
+  function done(err) {
+    if (submitBtn) { submitBtn.textContent = isSignUp ? 'Create account ↗' : 'Sign in ↗'; submitBtn.disabled = false; }
+    if (err) showAuthError(err.message || String(err));
+  }
 
   if (isSignUp) {
     name     = (document.getElementById('a-name-inp') || {}).value || '';
     email    = (document.getElementById('a-email-up') || {}).value || '';
     password = (document.getElementById('a-pass-up')  || {}).value || '';
-    if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
-    if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
-    var db = dbLoad();
-    if (db[email]) { showAuthError('An account with this email already exists. Sign in instead.'); return; }
-    // Create account
-    var newUser = {
-      email: email,
-      name: name || email.split('@')[0],
-      password: btoa(password), // basic obfuscation (not cryptographic — for demo)
-      plan: 'standard',
-      projects: {},
-      settings: {},
-      createdAt: Date.now()
-    };
-    db[email] = newUser;
-    dbSave(db);
-    currentUser = newUser;
-    userPlan = 'standard';
-    sessionSave(email);
-    applyUserToUI();
-    showToast('Account created! Welcome to ORDECK.');
-    go('s-tutorial');
+    if (!email || !password) { done({message:'Please fill in all fields.'}); return; }
+    if (password.length < 6) { done({message:'Password must be at least 6 characters.'}); return; }
+    sbSignUp(email, password, name || email.split('@')[0]).then(function(user) {
+      currentUser = { email, name: name||email.split('@')[0], plan:'standard', _id: user.id||email };
+      userPlan = 'standard';
+      applyUserToUI();
+      showToast('Account created! Welcome to ORDECK.');
+      done(null);
+      go('s-tutorial');
+    }).catch(function(err) { done(err); });
   } else {
     email    = (document.getElementById('a-email-si') || {}).value || '';
     password = (document.getElementById('a-pass-si')  || {}).value || '';
-    if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
-    var db2 = dbLoad();
-    var user = db2[email];
-    if (!user) { showAuthError('No account found with that email. Create one above.'); return; }
-    if (user.password !== btoa(password)) { showAuthError('Incorrect password. Try again.'); return; }
-    // Login success — restore all saved data
-    currentUser = user;
-    userPlan = user.plan || 'standard';
-    sessionSave(email);
-    applyUserToUI();
-    if (userPlan === 'prototype-plus') applyPrototypePlus();
-    // Restore saved projects
-    if (user.projects) {
-      try { localStorage.setItem('ordeck-projects', JSON.stringify(Object.values(user.projects))); } catch(e){}
-    }
-    showToast('Welcome back, ' + (user.name || email.split('@')[0]) + '!');
-    // Restore deep-link if any
-    let deepLink2 = null;
-    try { deepLink2 = sessionStorage.getItem('ordeck_deeplink'); sessionStorage.removeItem('ordeck_deeplink'); } catch(e){}
-    // Check for broadcast message
-    try {
-      const bcast = localStorage.getItem('ordeck-broadcast');
-      if (bcast) showToast('📢 ' + bcast);
-    } catch(e){}
-    go(deepLink2 || 's-home');
+    if (!email || !password) { done({message:'Please enter your email and password.'}); return; }
+    sbSignIn(email, password).then(function(user) {
+      currentUser = user;
+      currentUser._id = user.id || user.email;
+      userPlan = user.plan || 'standard';
+      applyUserToUI();
+      if (userPlan === 'prototype-plus') applyPrototypePlus();
+      showToast('Welcome back, ' + (user.name || email.split('@')[0]) + '!');
+      done(null);
+      go('s-home');
+      homeExploreRender && homeExploreRender();
+      if (!fpMsgPollIv) fpMsgPollIv = setInterval(fpPoll, 4000);
+    }).catch(function(err) { done(err); });
   }
 }
 
@@ -2769,52 +2697,38 @@ function showAuthError(msg) {
 
 // ── LOGOUT ──
 function doLogout() {
-  if (!confirm('Log out of ORDECK? Your projects are saved and will be here when you return.')) return;
-  // Save current projects to account before logging out
-  saveUserData();
+  if (!confirm('Log out of ORDECK? Your data is saved to the server.')) return;
+  sbSignOut().catch(function(){});
   sessionClear();
   currentUser = null;
   userPlan = 'standard';
-  // Clear in-memory projects
-  try { localStorage.removeItem('ordeck-projects'); } catch(e){}
+  sbUnsubscribeMessages && sbUnsubscribeMessages();
+  if (fpMsgPollIv) { clearInterval(fpMsgPollIv); fpMsgPollIv = null; }
   showToast('Logged out. See you soon!');
-  setTimeout(function(){ go('s-auth'); }, 800);
+  setTimeout(function(){ go('s-auth'); }, 600);
 }
 
-// ── SAVE user data back to DB ──
+// ── SAVE user data to server ──
 function saveUserData() {
   if (!currentUser) return;
-  // Grab current projects from localStorage
-  try {
-    var raw = localStorage.getItem('ordeck-projects');
-    if (raw) {
-      var projs = JSON.parse(raw);
-      currentUser.projects = {};
-      projs.forEach(function(p){ currentUser.projects[p.id || p.name] = p; });
-    }
-  } catch(e){}
-  // Save settings
   var nameInp = document.getElementById('set-name-inp');
-  if (nameInp && nameInp.value) currentUser.name = nameInp.value;
-  currentUser.plan = userPlan;
-  var db = dbLoad();
-  db[currentUser.email] = currentUser;
-  dbSave(db);
+  var updates = { plan: userPlan };
+  if (nameInp && nameInp.value) { updates.name = nameInp.value; currentUser.name = nameInp.value; }
+  sbUpdateProfile(updates).catch(function(e){ console.warn('Profile save failed:', e); });
 }
-
-// Auto-save every 60 seconds
-setInterval(function(){ if (currentUser) saveUserData(); }, 60000);
-
-// Save on page unload
-window.addEventListener('beforeunload', function(){ if (currentUser) saveUserData(); });
+// Debounced auto-save every 90 seconds
+setInterval(function(){ if (currentUser) saveUserData(); }, 90000);
 
 // ── SAVE PROFILE ──
 function saveProfile() {
   if (!currentUser) { showToast('Log in to save your profile'); return; }
   var nameInp = document.getElementById('set-name-inp');
-  if (nameInp) currentUser.name = nameInp.value;
-  saveUserData();
-  showToast('Profile saved ✓');
+  var name = nameInp ? nameInp.value : currentUser.name;
+  sbUpdateProfile({ name, plan: userPlan }).then(function() {
+    currentUser.name = name;
+    applyUserToUI();
+    showToast('Profile saved ✓');
+  }).catch(function(e){ showToast('Save failed: ' + e.message); });
 }
 
 // ── AUTH GATE (blocks non-logged-in users from studios) ──
@@ -2917,14 +2831,14 @@ touchProj = function(studio) {
   if (upPass)  upPass.id  = 'a-pass-up';
 })();
 
-// ── PREMIUM: also gate applyPrototypePlus to save to account ──
+// ── PREMIUM: save plan to server ──
 var _applyPrototypePlus = applyPrototypePlus;
 applyPrototypePlus = function() {
   _applyPrototypePlus();
   if (currentUser) {
     currentUser.plan = 'prototype-plus';
     userPlan = 'prototype-plus';
-    saveUserData();
+    sbUpdateProfile({ plan: 'prototype-plus' }).catch(function(){});
   }
 };
 
@@ -3485,485 +3399,187 @@ function adminLog(msg, cls) {
 }
 
 function adminLoadStats() {
-  const db = dbLoad();
-  const users = Object.values(db);
-  const premiumCount = users.filter(u => u.plan === 'prototype-plus').length;
-  const totalProjects = users.reduce((n,u) => n + Object.keys(u.projects||{}).length, 0);
-  const onlineCount = users.filter(u => u.lastSeen && (Date.now()-u.lastSeen)<300000).length || 1;
-  const friendCount = Math.floor(users.reduce((n,u) => n+(u.friends||[]).length,0)/2);
-  const storageSz = (() => { let s=0; try{for(let k in localStorage)s+=(localStorage.getItem(k)||'').length*2}catch(e){} return s>1048576?(s/1048576).toFixed(1)+' MB':(s/1024).toFixed(1)+' KB'; })();
-  let codeCount = 0; try{codeCount=Object.keys(JSON.parse(localStorage.getItem('ordeck-codes')||'{}')).length}catch(e){}
-  const broadcastMsg = localStorage.getItem('ordeck-broadcast') || 'None';
-
-  // ① Global bar
-  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-  setEl('agb-total', users.length);
-  setEl('agb-premium', premiumCount);
-  setEl('agb-standard', users.length - premiumCount);
-  setEl('agb-online', onlineCount);
-  setEl('agb-projects', totalProjects);
-  setEl('agb-friends', friendCount);
-  setEl('agb-storage', storageSz);
-  setEl('agb-codes', codeCount);
-
-  // Live clock
-  const clockEl = document.getElementById('admin-live-clock');
-  if (clockEl) clockEl.textContent = new Date().toLocaleTimeString();
-
-  // Original stat cards
   const grid = document.getElementById('admin-stats-grid');
-  if (grid) grid.innerHTML = `
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-users" aria-hidden="true"></i> Accounts</div>
-      <div class="admin-stat"><span class="admin-stat-k">Total accounts</span><span class="admin-stat-v">${users.length}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Prototype+ users</span><span class="admin-stat-v">${premiumCount}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Standard users</span><span class="admin-stat-v">${users.length - premiumCount}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Online now (&lt;5 min)</span><span class="admin-stat-v">${onlineCount}</span></div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-folder" aria-hidden="true"></i> Projects & Data</div>
-      <div class="admin-stat"><span class="admin-stat-k">Total projects</span><span class="admin-stat-v">${totalProjects}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Total friendships</span><span class="admin-stat-v">${friendCount}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Storage used</span><span class="admin-stat-v">${storageSz}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">DB size</span><span class="admin-stat-v">${(JSON.stringify(db).length/1024).toFixed(1)} KB</span></div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-broadcast" aria-hidden="true"></i> Broadcast</div>
-      <div class="admin-stat"><span class="admin-stat-k">Active message</span></div>
-      <div style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);margin-top:.35rem;line-height:1.6;word-break:break-all">${broadcastMsg.slice(0,100)}</div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-key" aria-hidden="true"></i> Session</div>
-      <div class="admin-stat"><span class="admin-stat-k">Logged in as</span><span class="admin-stat-v">${currentUser ? currentUser.email : 'No session'}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Plan</span><span class="admin-stat-v">${currentUser ? currentUser.plan : '—'}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Admin code active</span><span class="admin-stat-v" style="color:#34d399">YES</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Active coupon codes</span><span class="admin-stat-v">${codeCount}</span></div>
-    </div>`;
-
-  // ② App Health
-  adminRunHealthCheck();
-
-  // ③ Session Monitor
-  adminRenderSessions();
-
-  // ⑤ Feature Flags
-  adminRenderFlags();
-
-  // Codes list
-  const codesEl = document.getElementById('admin-codes-list');
-  if (codesEl) {
-    try {
-      const codes = JSON.parse(localStorage.getItem('ordeck-codes') || '{}');
-      codesEl.innerHTML = Object.keys(codes).map(k =>
-        `<div style="display:flex;align-items:center;justify-content:space-between"><span>${k}</span><button class="admin-flag-del" onclick="adminRemoveCode('${k}')">✕</button></div>`
-      ).join('') || '<div style="color:rgba(200,200,220,.25)">No custom codes</div>';
-    } catch(e){}
-  }
-
-  adminLog('Stats refreshed — ' + users.length + ' users, ' + totalProjects + ' projects', 'ok');
-}
-
-// ② HEALTH CHECK
-function adminRunHealthCheck() {
-  const ok = '<span style="color:#34d399">✓ OK</span>';
-  const fail = '<span style="color:#f87171">✗ Not available</span>';
-  const setH = (id,v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
-
-  setH('hs-audio', (window.AudioContext||window.webkitAudioContext) ? ok : fail);
-  setH('hs-recorder', window.MediaRecorder ? ok : fail);
-  setH('hs-canvas', (() => { try{const c=document.createElement('canvas');return c.getContext('2d')?ok:fail}catch(e){return fail} })());
-  setH('hs-network', navigator.onLine ? ok : '<span style="color:#f87171">✗ Offline</span>');
-  setH('hs-storage', (() => { try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return ok}catch(e){return fail} })());
-  setH('hs-ua', navigator.userAgent.slice(0,40)+'…');
-  setH('hs-screen', screen.width+'×'+screen.height);
-  setH('hs-lang', navigator.language||'—');
-  setH('hs-tz', Intl.DateTimeFormat().resolvedOptions().timeZone||'—');
-  setH('hs-session', window._adminSessionStart ? new Date(window._adminSessionStart).toLocaleTimeString() : 'This session');
-  if (!window._adminSessionStart) window._adminSessionStart = Date.now();
-
-  // Heatmap — simulate 24hr activity based on log entries length
-  const hm = document.getElementById('admin-heatmap');
-  if (hm) {
-    const data = new Array(24).fill(0);
-    try {
-      const log = document.getElementById('admin-log');
-      if (log) { const lines = log.querySelectorAll('.admin-log-line'); lines.forEach(l => { const h=parseInt((l.textContent||'').split(':')[0].replace('[','')); if(h>=0&&h<24)data[h]++; }); }
-    } catch(e){}
-    const max = Math.max(...data,1);
-    hm.innerHTML = data.map((v,i) => {
-      const alpha = 0.07 + (v/max)*0.75;
-      const label = i+':00';
-      return `<div class="adm-heat-cell" style="background:rgba(248,113,113,${alpha.toFixed(2)})" title="${label} — ${v} actions"></div>`;
-    }).join('');
-  }
-}
-
-// ③ SESSION MONITOR
-function adminRenderSessions(filter) {
-  const db = dbLoad();
-  let users = Object.values(db);
-  const sort = (document.getElementById('admin-session-sort')||{}).value || 'recent';
-  const f = filter || (document.getElementById('admin-session-filter')||{}).value || '';
-
-  if (f) users = users.filter(u => (u.email||'').includes(f) || (u.name||'').includes(f) || (u.plan||'').includes(f));
-  if (sort==='name') users.sort((a,b)=>(a.name||a.email||'').localeCompare(b.name||b.email||''));
-  else if (sort==='plan') users.sort((a,b)=>(b.plan||'').localeCompare(a.plan||''));
-  else if (sort==='projects') users.sort((a,b)=>Object.keys(b.projects||{}).length-Object.keys(a.projects||{}).length);
-  else users.sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0));
-
-  const body = document.getElementById('admin-session-body');
-  if (!body) return;
-  if (!users.length) { body.innerHTML='<div style="padding:.7rem .55rem;font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.3)">No users match this filter.</div>'; return; }
-
-  const isPrem = u => u.plan==='prototype-plus';
-  const lastSeen = u => {
-    if (!u.lastSeen) return 'Never';
-    const s = Math.floor((Date.now()-u.lastSeen)/1000);
-    if (s<60) return s+'s ago';
-    if (s<3600) return Math.floor(s/60)+'m ago';
-    if (s<86400) return Math.floor(s/3600)+'h ago';
-    return Math.floor(s/86400)+'d ago';
-  };
-  const online = u => u.lastSeen && (Date.now()-u.lastSeen)<300000;
-  const studio = u => {
-    const map = {tb:'Tidal Beat',vs:'Visual',ds:'Dev Studio'};
-    return map[u.activeStudio]||'—';
-  };
-
-  body.innerHTML = users.map(u =>
-    `<div class="admin-session-row">
-      <div><div class="adm-sess-name">${u.name||'—'}${u.banned?'<span class="adm-ban-badge">BANNED</span>':''}</div><div class="adm-sess-email">${u.email||''}</div></div>
-      <div class="adm-sess-plan ${isPrem(u)?'prem':'std'}">${isPrem(u)?'⬡ Pro+':'Standard'}</div>
-      <div style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.5)">${studio(u)}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5)">${Object.keys(u.projects||{}).length}</div>
-      <div class="adm-sess-online"><div class="dot ${online(u)?'on':''}"></div>${lastSeen(u)}</div>
-      <div class="adm-sess-actions">
-        ${!isPrem(u)?`<button class="adm-sa prem" onclick="adminGrantPremiumTo('${u.email}')"><i class="ti ti-crown"></i></button>`:''}
-        <button class="adm-sa" onclick="adminViewUserDetails('${u.email}')"><i class="ti ti-eye"></i></button>
-        <button class="adm-sa" onclick="adminDeleteUserDirect('${u.email}')"><i class="ti ti-trash"></i></button>
-      </div>
-    </div>`
-  ).join('');
-}
-
-function adminViewUserDetails(email) {
-  const db = dbLoad(); const u = db[email]; if (!u) return;
-  const info = [
-    '═══ USER DETAILS ═══',
-    'Email: ' + email,
-    'Name: ' + (u.name||'—'),
-    'Plan: ' + u.plan,
-    'Projects: ' + Object.keys(u.projects||{}).length,
-    'Friends: ' + (u.friends||[]).length,
-    'Created: ' + (u.createdAt?new Date(u.createdAt).toLocaleString():'Unknown'),
-    'Last seen: ' + (u.lastSeen?new Date(u.lastSeen).toLocaleString():'Never'),
-    'Banned: ' + (u.banned?'YES':'No'),
-    '═══════════════════'
-  ];
-  info.forEach(l => adminLog(l, 'ok'));
-  adminLog('Viewed details: ' + email);
-}
-function adminGrantPremiumTo(email) {
-  const db = dbLoad();
-  if (!db[email]) { showToast('User not found'); return; }
-  db[email].plan = 'prototype-plus';
-  dbSave(db);
-  adminLog('Granted Prototype+ to ' + email, 'ok');
-  showToast('Prototype+ granted to ' + email);
-  adminLoadStats();
-}
-function adminDeleteUserDirect(email) {
-  if (!confirm('Delete ' + email + '?')) return;
-  const db = dbLoad(); delete db[email]; dbSave(db);
-  adminLog('Deleted: ' + email, 'warn');
-  showToast('User deleted');
-  adminLoadStats();
-}
-function adminBanUser() {
-  const email = (document.getElementById('admin-del-email')||{}).value || '';
-  if (!email) { showToast('Enter an email'); return; }
-  const db = dbLoad();
-  if (!db[email]) { showToast('User not found'); return; }
-  db[email].banned = true;
-  db[email].plan = 'standard';
-  dbSave(db);
-  adminLog('Banned user: ' + email, 'warn');
-  showToast('User banned: ' + email);
-  adminLoadStats();
-}
-
-// ④ BULK ACTIONS
-function adminBulkGrantPremium() {
-  if (!confirm('Grant Prototype+ to ALL users?')) return;
-  const db = dbLoad();
-  let count = 0;
-  Object.keys(db).forEach(k => { db[k].plan = 'prototype-plus'; count++; });
-  dbSave(db);
-  applyPrototypePlus();
-  adminLog(`Bulk premium granted to ${count} users`, 'ok');
-  showToast(`Prototype+ granted to ${count} users`);
-  adminLoadStats();
-}
-function adminBulkRevokePremium() {
-  if (!confirm('Revoke Prototype+ from ALL users?')) return;
-  const db = dbLoad(); let count = 0;
-  Object.keys(db).forEach(k => { if(db[k].plan==='prototype-plus'){db[k].plan='standard';count++;} });
-  dbSave(db);
-  adminLog(`Bulk premium revoked from ${count} users`, 'warn');
-  showToast(`Premium revoked from ${count} users`);
-  adminLoadStats();
-}
-function adminBulkExportUsers() {
-  const db = dbLoad();
-  const header = 'email,name,plan,projects,friends,created';
-  const rows = Object.values(db).map(u =>
-    [u.email||'', (u.name||'').replace(/,/g,' '), u.plan||'standard',
-     Object.keys(u.projects||{}).length, (u.friends||[]).length,
-     u.createdAt ? new Date(u.createdAt).toLocaleDateString() : ''].join(',')
-  );
-  const csv = [header, ...rows].join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ordeck-users-'+Date.now()+'.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  adminLog('Users exported as CSV', 'ok'); showToast('Users CSV exported');
-}
-function adminBulkClearInactive() {
-  const threshold = Date.now() - 30*24*60*60*1000;
-  const db = dbLoad(); let count = 0;
-  Object.keys(db).forEach(k => {
-    const u = db[k];
-    if (u.lastSeen && u.lastSeen < threshold) { delete db[k]; count++; }
-    else if (!u.lastSeen && u.createdAt && u.createdAt < threshold) { delete db[k]; count++; }
-  });
-  dbSave(db);
-  adminLog(`Removed ${count} inactive users (30+ days)`, 'warn');
-  showToast(`${count} inactive users removed`);
-  adminLoadStats();
-}
-function adminBulkResetAvatars() {
-  if (!confirm('Reset all display names to email prefixes?')) return;
-  const db = dbLoad(); let count = 0;
-  Object.keys(db).forEach(k => { if(db[k].name){db[k].name=db[k].email.split('@')[0];count++;} });
-  dbSave(db);
-  adminLog(`Reset ${count} display names`, 'ok');
-  showToast(`${count} display names reset`);
-}
-function adminImportDB(event) {
-  const f = event.target.files[0]; if (!f) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (typeof data !== 'object') throw new Error('Invalid format');
-      dbSave(data);
-      adminLog('DB imported: ' + Object.keys(data).length + ' records', 'ok');
-      showToast('DB imported — ' + Object.keys(data).length + ' records');
-      adminLoadStats();
-    } catch(e) { showToast('Import failed: ' + e.message); adminLog('Import error: ' + e.message); }
-  };
-  reader.readAsText(f);
-}
-function adminMassMessage() {
-  const msg = (document.getElementById('admin-mass-msg')||{}).value || '';
-  const target = (document.getElementById('admin-mass-target')||{}).value || 'all';
-  if (!msg) { showToast('Enter a message'); return; }
-  const db = dbLoad(); let count = 0;
-  Object.values(db).forEach(u => {
-    if (target==='all' || (target==='premium'&&u.plan==='prototype-plus') || (target==='standard'&&u.plan!=='prototype-plus')) {
-      if (!u.inbox) u.inbox = [];
-      u.inbox.unshift({from:'ORDECK', text:msg, ts:Date.now()});
-      count++;
-    }
-  });
-  dbSave(db);
-  adminLog(`Mass message sent to ${count} users (${target})`, 'ok');
-  showToast(`Message sent to ${count} ${target} users`);
-  if (document.getElementById('admin-mass-msg')) document.getElementById('admin-mass-msg').value = '';
-}
-function adminRemoveCode(code) {
-  try {
-    const codes = JSON.parse(localStorage.getItem('ordeck-codes')||'{}');
-    delete codes[code]; localStorage.setItem('ordeck-codes', JSON.stringify(codes));
-    adminLog('Code removed: ' + code, 'ok'); showToast('Code removed: ' + code); adminLoadStats();
-  } catch(e){}
-}
-
-// ⑤ FEATURE FLAGS
-const ADMIN_DEFAULT_FLAGS = [
-  {key:'registration', label:'Registration Open', desc:'Allow new sign-ups', on:true},
-  {key:'tidal-ai', label:'Tidal Beat AI', desc:'Enable AI features in Tidal Beat', on:true},
-  {key:'vs-ai', label:'Visual Studio AI', desc:'Enable AI features in Visual Studio', on:true},
-  {key:'ds-ai', label:'Dev Studio AI Code+', desc:'Enable AI in Dev Studio', on:true},
-  {key:'maintenance', label:'Maintenance Mode', desc:'Block non-admins from studios', on:false},
-  {key:'free-premium', label:'Free Premium Weekend', desc:'Give everyone Prototype+ temporarily', on:false},
-  {key:'friends', label:'Friends System', desc:'Enable friend requests and DMs', on:true},
-  {key:'instruments', label:'Instruments Panel', desc:'Show piano/drums in Tidal Beat', on:true},
-];
-function adminGetFlags() {
-  try { return JSON.parse(localStorage.getItem('ordeck-flags') || '{}'); } catch(e) { return {}; }
-}
-function adminSaveFlags(f) { try{localStorage.setItem('ordeck-flags', JSON.stringify(f))}catch(e){} }
-function adminRenderFlags() {
-  const list = document.getElementById('admin-flags-list'); if (!list) return;
-  const stored = adminGetFlags();
-  const all = [...ADMIN_DEFAULT_FLAGS];
-  // Add custom flags
-  Object.keys(stored).forEach(k => { if (!all.find(f=>f.key===k)) all.push({key:k, label:k, desc:'Custom flag', on:stored[k]}); });
-  list.innerHTML = all.map(f => {
-    const isOn = stored.hasOwnProperty(f.key) ? stored[f.key] : f.on;
-    return `<div class="admin-flag-row">
-      <span class="admin-flag-name">${f.label}</span>
-      <span style="font-size:10px;color:rgba(248,113,113,.35);flex:1">${f.desc}</span>
-      <div class="admin-flag-toggle">
-        <div class="adm-toggle ${isOn?'on':''}" onclick="adminToggleFlag('${f.key}',this)" title="${f.key}"></div>
-        <span style="font-family:var(--mono);font-size:8px;color:rgba(248,113,113,.35);min-width:28px">${isOn?'ON':'OFF'}</span>
-        ${!ADMIN_DEFAULT_FLAGS.find(x=>x.key===f.key)?`<button class="admin-flag-del" onclick="adminDeleteFlag('${f.key}')">✕</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-function adminToggleFlag(key, el) {
-  const flags = adminGetFlags();
-  const wasOn = el.classList.contains('on');
-  el.classList.toggle('on');
-  flags[key] = !wasOn;
-  adminSaveFlags(flags);
-  const lbl = el.nextElementSibling;
-  if (lbl) lbl.textContent = flags[key] ? 'ON' : 'OFF';
-  adminLog(`Flag "${key}" set to ${flags[key] ? 'ON' : 'OFF'}`, 'ok');
-  showToast(`"${key}" ${flags[key]?'enabled':'disabled'}`);
-  // Apply live effects
-  if (key==='free-premium' && flags[key]) applyPrototypePlus();
-  if (key==='maintenance' && flags[key]) showToast('⚠ Maintenance mode ON — only admin can access studios');
-}
-function adminAddFlag() {
-  const inp = document.getElementById('admin-new-flag'); if (!inp||!inp.value.trim()) return;
-  const key = inp.value.trim().toLowerCase().replace(/\s+/g,'-');
-  const flags = adminGetFlags(); flags[key] = false; adminSaveFlags(flags);
-  adminLog('Custom flag added: ' + key, 'ok'); showToast('Flag added: ' + key);
-  inp.value = ''; adminRenderFlags();
-}
-function adminDeleteFlag(key) {
-  const flags = adminGetFlags(); delete flags[key]; adminSaveFlags(flags);
-  adminLog('Flag deleted: ' + key); showToast('Flag removed: ' + key); adminRenderFlags();
-}
-
-// ⑥ ENHANCED CONSOLE
-function adminConsoleRun(cmd) {
-  const inp = document.getElementById('admin-console-inp');
-  if (inp) inp.value = cmd;
-  adminConsoleExec(cmd);
-}
-function adminConsoleExec(cmd) {
-  adminLog('> ' + cmd);
-  const parts = cmd.trim().split(' ');
-  switch(parts[0]) {
-    case 'help':
-      ['help — show commands',
-       'users — list all users',
-       'stats — reload stats',
-       'health — run health check',
-       'flags — list feature flags',
-       'sessions — reload session monitor',
-       'grant [email] — grant Prototype+',
-       'revoke [email] — revoke Prototype+',
-       'delete [email] — delete user',
-       'ban [email] — ban user',
-       'export — export DB',
-       'broadcast [msg] — set broadcast',
-       'code [name] — add coupon code',
-       'premium-me — upgrade current session',
-       'clear — clear log',
-       'nuke — reset entire DB',
-      ].forEach(l => adminLog(l, 'ok'));
-      break;
-    case 'users':
-      { const db=dbLoad(); const us=Object.values(db);
-        adminLog(`Total: ${us.length} users`, 'ok');
-        us.forEach(u => adminLog(`  ${u.email} [${u.plan}] ${u.banned?'[BANNED]':''}`)); }
-      break;
-    case 'stats': adminLoadStats(); break;
-    case 'health': adminRunHealthCheck(); adminLog('Health check complete', 'ok'); break;
-    case 'flags':
-      { const flags=adminGetFlags();
-        adminLog('Feature flags:', 'ok');
-        ADMIN_DEFAULT_FLAGS.forEach(f => adminLog(`  ${f.key}: ${flags.hasOwnProperty(f.key)?flags[f.key]:f.on}`));
-        Object.keys(flags).forEach(k => { if(!ADMIN_DEFAULT_FLAGS.find(x=>x.key===k)) adminLog(`  ${k} (custom): ${flags[k]}`); }); }
-      break;
-    case 'sessions': adminRenderSessions(); adminLog('Sessions refreshed', 'ok'); break;
-    case 'grant':
-      if (parts[1]) adminGrantPremiumTo(parts[1]);
-      else { adminLog('Usage: grant user@email.com'); }
-      break;
-    case 'revoke':
-      if (parts[1]) { document.getElementById('admin-grant-email').value=parts[1]; adminRevokePremium(); }
-      break;
-    case 'delete':
-      if (parts[1]) adminDeleteUserDirect(parts[1]);
-      break;
-    case 'ban':
-      if (parts[1]) { document.getElementById('admin-del-email').value=parts[1]; adminBanUser(); }
-      break;
-    case 'export': adminExportDB(); break;
-    case 'broadcast': {
-      const msg = parts.slice(1).join(' ');
-      if (msg) { try{localStorage.setItem('ordeck-broadcast',msg)}catch(e){} adminLog('Broadcast set: ' + msg,'ok'); showToast('Broadcast set'); }
-      break; }
-    case 'code':
-      if (parts[1]) { document.getElementById('admin-new-code').value=parts[1]; adminAddCode(); }
-      break;
-    case 'premium-me': applyPrototypePlus(); adminLog('Prototype+ granted to current session','ok'); break;
-    case 'clear': document.getElementById('admin-log').innerHTML=''; break;
-    case 'nuke': adminResetDB(); break;
-    default: adminLog('Unknown command "'+parts[0]+'". Type "help" for a list.','warn');
-  }
-}
-
-function adminConsoleKey(e) {
-  if (e.key !== 'Enter') return;
-  const inp = document.getElementById('admin-console-inp');
-  const cmd = inp ? inp.value.trim() : ''; if (!cmd) return;
-  if (inp) inp.value = '';
-  adminConsoleExec(cmd);
-}
-
-// Live clock interval
-setInterval(() => {
-  const el = document.getElementById('admin-live-clock');
-  if (el && document.getElementById('s-admin').classList.contains('active')) el.textContent = new Date().toLocaleTimeString();
-}, 1000);
   if (!grid) return;
   const db = dbLoad();
   const users = Object.values(db);
   const premiumCount = users.filter(u => u.plan === 'prototype-plus').length;
-  const totalProjects = users.reduce((n,u) => n + Object.keys(u.projects||{}).length, 0);
+  const totalSavedProjs = users.reduce((n,u) => n + Object.keys(u.projects||{}).length, 0);
   const broadcastMsg = localStorage.getItem('ordeck-broadcast') || 'None';
+  const pubProjs = projDBLoad();
+  const totalLikes = pubProjs.reduce((n,p) => n+(p.likes||[]).length, 0);
+  const totalComments = pubProjs.reduce((n,p) => n+(p.comments||[]).length, 0);
+  const totalFriends = users.reduce((n,u) => n+Object.keys(u.friends||{}).length, 0);
+  const bannedList = adminGetBanned();
+  const dbSize = (JSON.stringify(db).length / 1024).toFixed(1);
+  const maintMode = localStorage.getItem('ordeck-maintenance') === 'on';
+  const motd = localStorage.getItem('ordeck-motd') || 'None';
+  const newestUser = users.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))[0];
+  const joinedToday = users.filter(u => u.createdAt && Date.now()-u.createdAt < 86400000).length;
+  const joinedWeek  = users.filter(u => u.createdAt && Date.now()-u.createdAt < 604800000).length;
 
+  // ── MAIN STATS GRID ──
   grid.innerHTML = `
     <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-users" aria-hidden="true"></i> Users</div>
-      <div class="admin-stat"><span class="admin-stat-k">Total accounts</span><span class="admin-stat-v">${users.length}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Prototype+ users</span><span class="admin-stat-v">${premiumCount}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Standard users</span><span class="admin-stat-v">${users.length - premiumCount}</span></div>
+      <div class="admin-card-title"><i class="ti ti-users" aria-hidden="true"></i> Accounts</div>
+      <div class="admin-stat"><span class="admin-stat-k">Total accounts</span><span class="admin-stat-v" style="font-size:18px;color:#f87171">${users.length}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Prototype+</span><span class="admin-stat-v">${premiumCount}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Standard (free)</span><span class="admin-stat-v">${users.length - premiumCount}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Banned accounts</span><span class="admin-stat-v" style="color:${bannedList.length>0?'#f87171':'#34d399'}">${bannedList.length}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Joined today</span><span class="admin-stat-v">${joinedToday}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Joined this week</span><span class="admin-stat-v">${joinedWeek}</span></div>
+      ${newestUser?`<div class="admin-stat"><span class="admin-stat-k">Newest user</span><span class="admin-stat-v" style="font-size:9px">${newestUser.email||'—'}</span></div>`:''}
     </div>
     <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-folder" aria-hidden="true"></i> Projects</div>
-      <div class="admin-stat"><span class="admin-stat-k">Total projects</span><span class="admin-stat-v">${totalProjects}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">DB size (approx)</span><span class="admin-stat-v">${(JSON.stringify(db).length/1024).toFixed(1)} KB</span></div>
+      <div class="admin-card-title"><i class="ti ti-world" aria-hidden="true"></i> Published Projects</div>
+      <div class="admin-stat"><span class="admin-stat-k">Total published</span><span class="admin-stat-v" style="font-size:18px;color:#f87171">${pubProjs.length}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Public</span><span class="admin-stat-v">${pubProjs.filter(p=>p.visibility==='public').length}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Private</span><span class="admin-stat-v">${pubProjs.filter(p=>p.visibility==='private').length}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Total likes</span><span class="admin-stat-v">${totalLikes}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Total comments</span><span class="admin-stat-v">${totalComments}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Saved (in-studio)</span><span class="admin-stat-v">${totalSavedProjs}</span></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-title"><i class="ti ti-server" aria-hidden="true"></i> System</div>
+      <div class="admin-stat"><span class="admin-stat-k">DB size</span><span class="admin-stat-v">${dbSize} KB</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Social connections</span><span class="admin-stat-v">${Math.floor(totalFriends/2)}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Maintenance</span><span class="admin-stat-v" style="color:${maintMode?'#f87171':'#34d399'}">${maintMode?'🔴 ON':'🟢 OFF'}</span></div>
       <div class="admin-stat"><span class="admin-stat-k">Admin code</span><span class="admin-stat-v">ACTIVE</span></div>
-    </div>
-    <div class="admin-card">
-      <div class="admin-card-title"><i class="ti ti-broadcast" aria-hidden="true"></i> Broadcast</div>
-      <div class="admin-stat"><span class="admin-stat-k">Active message</span></div>
-      <div style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);margin-top:.35rem;line-height:1.6;word-break:break-all">${broadcastMsg.slice(0,100)}</div>
+      <div class="admin-stat"><span class="admin-stat-k">Active MOTD</span><span class="admin-stat-v" style="font-size:9px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${motd.slice(0,30)||'—'}</span></div>
     </div>
     <div class="admin-card">
       <div class="admin-card-title"><i class="ti ti-key" aria-hidden="true"></i> Current Session</div>
-      <div class="admin-stat"><span class="admin-stat-k">Logged in as</span><span class="admin-stat-v">${currentUser ? currentUser.email : 'No session'}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Logged in as</span><span class="admin-stat-v" style="font-size:9px">${currentUser ? currentUser.email : 'No session'}</span></div>
       <div class="admin-stat"><span class="admin-stat-k">Plan</span><span class="admin-stat-v">${currentUser ? currentUser.plan : '—'}</span></div>
-      <div class="admin-stat"><span class="admin-stat-k">Admin unlocked</span><span class="admin-stat-v">YES</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Admin</span><span class="admin-stat-v">✓ Unlocked</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Session started</span><span class="admin-stat-v" style="font-size:9px">${new Date().toLocaleTimeString()}</span></div>
     </div>`;
 
+  // Coupon codes
+  const codesEl = document.getElementById('admin-codes-list');
+  if (codesEl) {
+    try {
+      const codes = JSON.parse(localStorage.getItem('ordeck-codes') || '{}');
+      codesEl.innerHTML = Object.keys(codes).map(k => `<div style="display:flex;justify-content:space-between;align-items:center"><span>${k}</span><button onclick="adminRemoveCode('${k}')" style="background:none;border:none;color:rgba(248,113,113,.5);cursor:pointer;font-size:11px">×</button></div>`).join('') || '<div style="color:rgba(200,200,220,.25)">No custom codes</div>';
+    } catch(e){}
+  }
+
+  // ── GROWTH ANALYTICS ──
+  const growthEl = document.getElementById('admin-growth-stats');
+  if (growthEl) {
+    const convRate = users.length > 0 ? ((premiumCount/users.length)*100).toFixed(1) : 0;
+    growthEl.innerHTML = `
+      <div class="admin-stat"><span class="admin-stat-k">Premium conversion</span><span class="admin-stat-v">${convRate}%</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Avg projects/user</span><span class="admin-stat-v">${users.length>0?(totalSavedProjs/users.length).toFixed(1):0}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Avg likes/project</span><span class="admin-stat-v">${pubProjs.length>0?(totalLikes/pubProjs.length).toFixed(1):0}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Publish rate</span><span class="admin-stat-v">${users.length>0?(pubProjs.length/users.length).toFixed(1):0} /user</span></div>`;
+    // Draw simple bar chart on canvas
+    const canvas = document.getElementById('admin-growth-chart');
+    if (canvas) adminDrawGrowthChart(canvas, users);
+  }
+
+  const actEl = document.getElementById('admin-activity-stats');
+  if (actEl) {
+    const totalViews = pubProjs.reduce((n,p)=>n+(p.views||0),0);
+    const lastActive = users.filter(u=>u.createdAt).sort((a,b)=>b.createdAt-a.createdAt).slice(0,3).map(u=>u.email||'?').join(', ');
+    actEl.innerHTML = `
+      <div class="admin-stat"><span class="admin-stat-k">Total project views</span><span class="admin-stat-v">${totalViews}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Total interactions</span><span class="admin-stat-v">${totalLikes+totalComments}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Most liked project</span><span class="admin-stat-v" style="font-size:9px">${pubProjs.sort((a,b)=>(b.likes||[]).length-(a.likes||[]).length)[0]?.name?.slice(0,20)||'—'}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Newest members</span></div>
+      <div style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.5);margin-top:.25rem;line-height:1.7">${lastActive||'—'}</div>`;
+  }
+
+  // ── PUBLISHED PROJECTS ──
+  const studioEl = document.getElementById('admin-proj-stats');
+  if (studioEl) {
+    const byStudio = {tb:0,vs:0,ds:0};
+    pubProjs.forEach(p=>{ if(byStudio[p.studio]!==undefined) byStudio[p.studio]++; });
+    studioEl.innerHTML = `
+      <div class="admin-stat"><span class="admin-stat-k"><i class="ti ti-music" style="color:#c084fc"></i> Tidal Beat</span><span class="admin-stat-v">${byStudio.tb}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k"><i class="ti ti-video" style="color:#22d3ee"></i> Visual Studio</span><span class="admin-stat-v">${byStudio.vs}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k"><i class="ti ti-code" style="color:#34d399"></i> Dev Studio</span><span class="admin-stat-v">${byStudio.ds}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Total public</span><span class="admin-stat-v">${pubProjs.filter(p=>p.visibility==='public').length}</span></div>`;
+  }
+  const topEl = document.getElementById('admin-top-projs');
+  if (topEl) {
+    const top = [...pubProjs].sort((a,b)=>(b.likes||[]).length-(a.likes||[]).length).slice(0,5);
+    topEl.innerHTML = top.length ? top.map((p,i)=>`<div class="admin-stat"><span class="admin-stat-k">${i+1}. ${escapeHtml(p.name.slice(0,18))}</span><span class="admin-stat-v">♥ ${(p.likes||[]).length}</span></div>`).join('') : '<div style="color:rgba(200,200,220,.25);font-size:11px;font-family:var(--mono)">No projects yet</div>';
+  }
+  const modEl = document.getElementById('admin-proj-moderate-list');
+  if (modEl) {
+    modEl.innerHTML = pubProjs.length ? pubProjs.slice(0,8).map(p=>`<div style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.5);padding:.2rem 0;border-bottom:.5px solid rgba(248,113,113,.07);display:flex;justify-content:space-between"><span>${escapeHtml(p.name.slice(0,22))}</span><span style="color:rgba(200,200,220,.3)">${p.id}</span></div>`).join('') : '<div style="color:rgba(200,200,220,.25);font-family:var(--mono);font-size:10px">No projects</div>';
+  }
+
+  // ── SOCIAL STATS ──
+  const socEl = document.getElementById('admin-social-stats');
+  if (socEl) {
+    const totalReqs = users.reduce((n,u)=>n+Object.keys(u.requests||{}).length,0);
+    const totalSent = users.reduce((n,u)=>n+Object.keys(u.sent||{}).length,0);
+    socEl.innerHTML = `
+      <div class="admin-stat"><span class="admin-stat-k">Total friendships</span><span class="admin-stat-v">${Math.floor(totalFriends/2)}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Pending requests</span><span class="admin-stat-v">${totalReqs}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Sent requests</span><span class="admin-stat-v">${totalSent}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Avg friends/user</span><span class="admin-stat-v">${users.length>0?(totalFriends/users.length).toFixed(1):0}</span></div>`;
+  }
+  const msgEl = document.getElementById('admin-msg-stats');
+  if (msgEl) {
+    let totalMsgs = 0;
+    users.forEach(u=>{ Object.values(u.messages||{}).forEach(t=>{ totalMsgs+=t.length; }); });
+    totalMsgs = Math.floor(totalMsgs/2); // each msg stored twice
+    msgEl.innerHTML = `
+      <div class="admin-stat"><span class="admin-stat-k">Total messages sent</span><span class="admin-stat-v">${totalMsgs}</span></div>
+      <div class="admin-stat"><span class="admin-stat-k">Avg msgs/user</span><span class="admin-stat-v">${users.length>0?(totalMsgs/users.length).toFixed(1):0}</span></div>`;
+  }
+
+  // ── SECURITY ──
+  const sessEl = document.getElementById('admin-sessions-list');
+  if (sessEl) {
+    try {
+      const sess = JSON.parse(localStorage.getItem(ORDECK_SESSION_KEY)||'null');
+      if (sess) {
+        sessEl.innerHTML = `<div class="admin-stat"><span class="admin-stat-k">Active session</span><span class="admin-stat-v" style="font-size:9px">${sess.email}</span></div><div class="admin-stat"><span class="admin-stat-k">Started</span><span class="admin-stat-v" style="font-size:9px">${new Date(sess.ts||Date.now()).toLocaleTimeString()}</span></div>`;
+      } else {
+        sessEl.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.25)">No active session</div>';
+      }
+    } catch(e){}
+  }
+  const bannedEl = document.getElementById('admin-banned-list');
+  if (bannedEl) {
+    bannedEl.innerHTML = bannedList.length ? bannedList.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0"><span>${e}</span><button onclick="adminUnbanSpecific('${e}')" style="background:none;border:none;color:rgba(52,211,153,.5);cursor:pointer;font-size:9px">Unban</button></div>`).join('') : '<div style="color:rgba(200,200,220,.25)">No banned users</div>';
+  }
+
+  // Audit log restore
+  const auditEl = document.getElementById('admin-audit-log');
+  if (auditEl) {
+    try {
+      const log = JSON.parse(localStorage.getItem('ordeck-audit')||'[]');
+      auditEl.innerHTML = log.slice(-30).reverse().map(l=>`<div class="admin-log-line ${l.cls||''}">${l.msg}</div>`).join('') || '<div style="color:rgba(200,200,220,.2);font-family:var(--mono);font-size:10px">No entries</div>';
+      auditEl.scrollTop = 0;
+    } catch(e){}
+  }
+
+  // Maintenance status
+  const maintEl = document.getElementById('admin-maint-status');
+  if (maintEl) maintEl.innerHTML = maintMode ? '<span style="color:#f87171">🔴 Maintenance mode ON — users see maintenance page</span>' : '<span style="color:#34d399">🟢 System online</span>';
+}
+
+// Hook admin stats loading without re-wrapping go()
+// Use a MutationObserver on the admin screen instead
+document.addEventListener('DOMContentLoaded', function() {
+  const adminScreen = document.getElementById('s-admin');
+  if (!adminScreen) return;
+  const obs = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      if (m.target.classList.contains('active')) {
+        if (!adminUnlocked) { go('s-home'); showToast('Admin panel locked'); return; }
+        adminLog('Admin panel opened', 'ok');
+        adminLoadStats();
+      }
+    });
+  });
+  obs.observe(adminScreen, { attributes: true, attributeFilter: ['class'] });
+});
 
 function adminFindUser() {
   const email = (document.getElementById('admin-user-search')||{}).value || '';
@@ -4403,53 +4019,47 @@ function fpTab(el, tab) {
 // ── Poll for updates ──
 function fpPoll() {
   if (!currentUser) return;
-  const db = friendsGetDB();
-  const me = friendsGetMe();
-  if (!db[me]) return;
-  friendsEnsureStructure(db, me);
-
-  // Count pending requests
-  const reqCount = Object.keys(db[me].requests || {}).length;
-  const reqBadge = document.getElementById('fp-req-badge');
-  if (reqBadge) { reqBadge.textContent = reqCount || ''; reqBadge.classList.toggle('show', reqCount > 0); }
-  const setReqBadge = document.getElementById('set-friends-badge');
-  if (setReqBadge) { setReqBadge.textContent = reqCount || ''; setReqBadge.style.display = reqCount > 0 ? 'flex' : 'none'; }
-
-  // Count unread messages
-  let totalUnread = 0;
-  const msgs = db[me].messages || {};
-  const friends = db[me].friends || {};
-  Object.keys(friends).forEach(fEmail => {
-    const tid = threadId(me, fEmail);
-    const thread = msgs[tid] || [];
-    const lastRead = fpUnreadMsgs['_read_' + fEmail] || 0;
-    const unread = thread.filter(m => m.from !== me && m.ts > lastRead).length;
-    if (unread > 0) { fpUnreadMsgs[fEmail] = unread; totalUnread += unread; }
-  });
-  const msgBadge = document.getElementById('fp-msg-badge');
-  if (msgBadge) { msgBadge.textContent = totalUnread || ''; msgBadge.classList.toggle('show', totalUnread > 0); }
-
-  // Notification dot on nav button
-  const notifDot = document.getElementById('friends-notif-dot');
-  if (notifDot) notifDot.classList.toggle('show', reqCount > 0 || totalUnread > 0);
-
-  // Re-render message thread if open
-  if (fpMsgThread && fpCurrentTab === 'messages') fpRenderMsgThread(fpMsgThread);
-  // Show toast for new messages if panel is closed
-  if (!fpPanelOpen && totalUnread > 0) {
-    const fName = Object.keys(fpUnreadMsgs).find(k => !k.startsWith('_') && fpUnreadMsgs[k] > 0);
-    if (fName) showMsgNotif(fName + ' sent you a message');
-  }
+  // Get pending requests count from server
+  sbGetFriends().then(function(rel) {
+    const reqCount = rel.requests.length;
+    const reqBadge = document.getElementById('fp-req-badge');
+    if (reqBadge) { reqBadge.textContent = reqCount || ''; reqBadge.classList.toggle('show', reqCount > 0); }
+    const setReqBadge = document.getElementById('set-friends-badge');
+    if (setReqBadge) { setReqBadge.textContent = reqCount || ''; setReqBadge.style.display = reqCount > 0 ? 'flex' : 'none'; }
+    // Unread message count
+    sbGetUnreadCount().then(function(totalUnread) {
+      const msgBadge = document.getElementById('fp-msg-badge');
+      if (msgBadge) { msgBadge.textContent = totalUnread || ''; msgBadge.classList.toggle('show', totalUnread > 0); }
+      const notifDot = document.getElementById('friends-notif-dot');
+      if (notifDot) notifDot.classList.toggle('show', reqCount > 0 || totalUnread > 0);
+      if (!fpPanelOpen && totalUnread > 0) showMsgNotif('You have ' + totalUnread + ' unread message' + (totalUnread > 1 ? 's' : ''));
+    }).catch(function(){});
+  }).catch(function(){});
 }
 
 // ── Main render ──
 function fpRender(tab) {
   const body = document.getElementById('fp-body');
   if (!body || !currentUser) return;
+  body.innerHTML = '<div class="fp-empty">Loading...</div>';
+  sbGetFriends().then(function(rel) {
+    fpRenderWithData(tab, rel);
+  }).catch(function() {
+    // Fallback
+    const rel = lsGetFriends ? lsGetFriends() : { friends:[], requests:[], sent:[] };
+    fpRenderWithData(tab, rel);
+  });
+}
+function fpRenderWithData(tab, rel) {
+  const body = document.getElementById('fp-body');
+  if (!body || !currentUser) return;
   const me = friendsGetMe();
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  const user = db[me];
+  // Shim: keep old variable names working
+  const user = { friends: {}, requests: {}, sent: {}, messages: {} };
+  rel.friends.forEach(f => user.friends[f.email] = f);
+  rel.requests.forEach(f => user.requests[f.email] = f);
+  rel.sent.forEach(f => user.sent[f.email] = f);
+  const db = {};
 
   if (tab === 'find') {
     body.innerHTML = `
@@ -4466,28 +4076,22 @@ function fpRender(tab) {
   }
 
   if (tab === 'requests') {
-    const reqs = user.requests || {};
-    const sent = user.sent || {};
     let html = '';
-    const incomingKeys = Object.keys(reqs);
-    if (incomingKeys.length > 0) {
+    if (rel.requests.length > 0) {
       html += '<div class="friend-section-lbl">Incoming requests</div>';
-      incomingKeys.forEach(email => {
-        const r = reqs[email];
-        const initials = (r.name||email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        html += friendCardHTML({ email, name: r.name||email.split('@')[0], initials, online: false }, 'request');
+      rel.requests.forEach(f => {
+        const initials = (f.name||f.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        html += friendCardHTML({ email: f.email, name: f.name||f.email.split('@')[0], initials, rowId: f.rowId }, 'request');
       });
     }
-    const sentKeys = Object.keys(sent);
-    if (sentKeys.length > 0) {
+    if (rel.sent.length > 0) {
       html += '<div class="friend-section-lbl" style="margin-top:.65rem">Sent requests</div>';
-      sentKeys.forEach(email => {
-        const r = sent[email];
-        const initials = (r.name||email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        html += friendCardHTML({ email, name: r.name||email.split('@')[0], initials, online: false }, 'sent');
+      rel.sent.forEach(f => {
+        const initials = (f.name||f.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        html += friendCardHTML({ email: f.email, name: f.name||f.email.split('@')[0], initials, rowId: f.rowId }, 'sent');
       });
     }
-    if (!incomingKeys.length && !sentKeys.length) {
+    if (!rel.requests.length && !rel.sent.length) {
       html = '<div class="fp-empty">No pending friend requests.<br>Use the Find tab to add friends.</div>';
     }
     body.innerHTML = html;
@@ -4536,19 +4140,14 @@ function fpRender(tab) {
   }
 
   // Default: friends list
-  const friends = user.friends || {};
-  const fKeys = Object.keys(friends);
-  if (fKeys.length === 0) {
+  if (rel.friends.length === 0) {
     body.innerHTML = '<div class="fp-empty">You have no friends yet.<br>Use the <b style="color:#c084fc">Find</b> tab to search for people.</div>';
     return;
   }
-  let html = `<div class="friend-section-lbl">${fKeys.length} friend${fKeys.length !== 1 ? 's' : ''}</div>`;
-  fKeys.forEach(fEmail => {
-    const fUser = db[fEmail];
-    const name = (fUser && fUser.name) || fEmail.split('@')[0];
-    const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const plan = fUser ? fUser.plan : 'standard';
-    html += friendCardHTML({ email: fEmail, name, initials, online: false, plan }, 'friend');
+  let html = `<div class="friend-section-lbl">${rel.friends.length} friend${rel.friends.length !== 1 ? 's' : ''}</div>`;
+  rel.friends.forEach(f => {
+    const initials = (f.name||f.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    html += friendCardHTML({ email: f.email, name: f.name||f.email.split('@')[0], initials, plan: f.plan, rowId: f.rowId }, 'friend');
   });
   body.innerHTML = html;
 }
@@ -4589,226 +4188,200 @@ function friendsSearch(email, resultContainerId) {
   if (!container) return;
   if (!email) { container.innerHTML = '<div class="fp-empty">Enter an email to search.</div>'; return; }
   if (email === me) { container.innerHTML = '<div class="fp-empty">That\'s you!</div>'; return; }
-  const db = friendsGetDB();
-  const found = db[email];
-  if (!found) { container.innerHTML = '<div class="fp-empty">No ORDECK account found for that email.</div>'; return; }
-  friendsEnsureStructure(db, me);
-  const myUser = db[me];
-  const isFriend  = myUser.friends[email];
-  const isPending = myUser.sent[email];
-  const isIncoming = myUser.requests[email];
-  const name = found.name || email.split('@')[0];
-  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const type = isFriend ? 'already' : isIncoming ? 'request' : isPending ? 'pending' : 'search';
-  container.innerHTML = friendCardHTML({ email, name, initials, plan: found.plan }, type);
+  container.innerHTML = '<div class="fp-empty">Searching...</div>';
+  sbSearchUser(email).then(function(found) {
+    if (!found) { container.innerHTML = '<div class="fp-empty">No ORDECK account found with that email.</div>'; return; }
+    sbGetFriends().then(function(rel) {
+      const isFriend   = rel.friends.some(f => f.email === email);
+      const isPending  = rel.sent.some(f => f.email === email);
+      const isIncoming = rel.requests.some(f => f.email === email);
+      const name = found.name || email.split('@')[0];
+      const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const type = isFriend ? 'already' : isIncoming ? 'request' : isPending ? 'pending' : 'search';
+      container.innerHTML = friendCardHTML({ email, name, initials, plan: found.plan }, type);
+    });
+  }).catch(function() { container.innerHTML = '<div class="fp-empty">Search failed. Try again.</div>'; });
 }
 
 // ── Send request ──
 function friendsSendRequest(toEmail) {
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, toEmail);
-  const myName = currentUser.name || me.split('@')[0];
-  // Add to my sent
-  db[me].sent[toEmail] = { name: (db[toEmail].name || toEmail.split('@')[0]), ts: Date.now() };
-  // Add to their incoming requests
-  db[toEmail].requests[me] = { name: myName, ts: Date.now() };
-  friendsSaveDB(db);
-  showToast('Friend request sent to ' + (db[toEmail].name || toEmail.split('@')[0]) + '!');
-  fpRender(fpCurrentTab);
-  if (document.getElementById('set-friends-results')) friendsRefreshSettingsLists();
+  if (!currentUser) { requireAuth(function(){ friendsSendRequest(toEmail); }); return; }
+  sbSendFriendRequest(toEmail).then(function() {
+    showToast('Friend request sent to ' + toEmail + '!');
+    fpRender(fpCurrentTab);
+    friendsRefreshSettingsLists();
+  }).catch(function(e){ showToast('Could not send request: ' + e.message); });
 }
 
 // ── Accept ──
-function friendsAccept(fromEmail) {
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, fromEmail);
-  const now = Date.now();
-  // Add to both friends lists
-  db[me].friends[fromEmail] = { since: now };
-  db[fromEmail].friends[me] = { since: now };
-  // Remove from requests/sent
-  delete db[me].requests[fromEmail];
-  delete db[fromEmail].sent[me];
-  friendsSaveDB(db);
-  const name = db[fromEmail].name || fromEmail.split('@')[0];
-  showToast('You and ' + name + ' are now friends!');
-  fpRender('friends');
-  fpTab(document.getElementById('fptab-friends'), 'friends');
-  friendsRefreshSettingsLists();
+function friendsAccept(rowId) {
+  sbRespondFriendRequest(rowId, true).then(function() {
+    showToast('Friend request accepted!');
+    fpCurrentTab = 'friends';
+    fpRender('friends');
+    const fptabEl = document.getElementById('fptab-friends');
+    if (fptabEl) fpTab(fptabEl, 'friends');
+    friendsRefreshSettingsLists();
+  }).catch(function(e){ showToast('Error: ' + e.message); });
 }
 
 // ── Decline ──
-function friendsDecline(fromEmail) {
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, fromEmail);
-  delete db[me].requests[fromEmail];
-  delete db[fromEmail].sent[me];
-  friendsSaveDB(db);
-  showToast('Request declined');
-  fpRender(fpCurrentTab);
-  friendsRefreshSettingsLists();
+function friendsDecline(rowId) {
+  sbRespondFriendRequest(rowId, false).then(function() {
+    showToast('Request declined');
+    fpRender(fpCurrentTab);
+    friendsRefreshSettingsLists();
+  }).catch(function(){});
 }
 
 // ── Cancel sent request ──
-function friendsCancelRequest(toEmail) {
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, toEmail);
-  delete db[me].sent[toEmail];
-  delete db[toEmail].requests[me];
-  friendsSaveDB(db);
-  showToast('Request cancelled');
-  fpRender(fpCurrentTab);
+function friendsCancelRequest(rowId) {
+  sbRespondFriendRequest(rowId, false).then(function() {
+    showToast('Request cancelled');
+    fpRender(fpCurrentTab);
+    friendsRefreshSettingsLists();
+  }).catch(function(){});
 }
 
 // ── Remove friend ──
-function friendsRemove(fEmail) {
-  if (!confirm('Remove ' + fEmail + ' from your friends?')) return;
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, fEmail);
-  delete db[me].friends[fEmail];
-  delete db[fEmail].friends[me];
-  friendsSaveDB(db);
-  showToast('Friend removed');
-  fpRender('friends');
-  friendsRefreshSettingsLists();
+function friendsRemove(rowId) {
+  if (!confirm('Remove this friend?')) return;
+  sbRemoveFriend(rowId).then(function() {
+    showToast('Friend removed');
+    fpRender('friends');
+    friendsRefreshSettingsLists();
+  }).catch(function(){});
 }
 
 // ── Messaging ──
-function fpOpenThread(fEmail) {
+// fpCurrentOtherUserId: the UUID of the friend (for Supabase) or email (for localStorage)
+let fpCurrentOtherUserId = null;
+
+function fpOpenThread(fEmail, fUserId) {
   fpMsgThread = fEmail;
+  fpCurrentOtherUserId = fUserId || fEmail;
   fpCurrentTab = 'messages';
-  // Mark as read
-  fpUnreadMsgs['_read_' + fEmail] = Date.now();
   fpUnreadMsgs[fEmail] = 0;
-  fpRenderMsgThread(fEmail);
+  // Subscribe to realtime if Supabase configured
+  sbSubscribeMessages && sbSubscribeMessages(fpCurrentOtherUserId, function(newMsg) {
+    const list = document.getElementById('fp-msg-list');
+    if (!list) return;
+    const me = friendsGetMe();
+    const isMine = (newMsg.sender === (currentUser && (currentUser.id || currentUser._id)));
+    if (isMine) return; // we already appended it optimistically
+    const d = new Date(newMsg.created_at || Date.now());
+    const timeStr = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble theirs';
+    bubble.innerHTML = escapeHtml(newMsg.text) + '<div class="msg-time">' + timeStr + '</div>';
+    list.appendChild(bubble);
+    list.scrollTop = list.scrollHeight;
+  });
+  fpRenderMsgThread(fEmail, fpCurrentOtherUserId);
 }
 
-function fpRenderMsgThread(fEmail) {
+function fpRenderMsgThread(fEmail, fUserId) {
   const body = document.getElementById('fp-body');
   const me = friendsGetMe();
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  const tid = threadId(me, fEmail);
-  const thread = (db[me].messages[tid] || []);
-  const fUser = db[fEmail];
-  const fName = (fUser && fUser.name) || fEmail.split('@')[0];
+  if (!body) return;
+  const uid = fUserId || fpCurrentOtherUserId || fEmail;
+  const fName = fEmail.split('@')[0];
   const fInitials = fName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
-  let msgsHTML = '';
-  let lastDate = '';
-  thread.forEach(msg => {
-    const d = new Date(msg.ts);
-    const dateStr = d.toLocaleDateString();
-    if (dateStr !== lastDate) {
-      msgsHTML += `<div class="msg-date-sep">${dateStr}</div>`;
-      lastDate = dateStr;
-    }
-    const isMine = msg.from === me;
-    const timeStr = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    msgsHTML += `<div class="msg-bubble ${isMine ? 'mine' : 'theirs'}">
-      ${escapeHtml(msg.text)}
-      <div class="msg-time">${timeStr}</div>
-    </div>`;
-  });
-  if (!msgsHTML) msgsHTML = '<div class="fp-empty" style="margin-top:1rem">No messages yet. Say hello!</div>';
-
-  body.innerHTML = `<div class="msg-thread">
+  body.innerHTML = `<div class="msg-thread" style="display:flex;flex-direction:column;height:100%">
     <div class="msg-thread-hd">
-      <button class="msg-thread-back" onclick="fpMsgThread=null;fpRender('messages')">← Back</button>
+      <button class="msg-thread-back" onclick="sbUnsubscribeMessages&&sbUnsubscribeMessages();fpMsgThread=null;fpRender('messages')">← Back</button>
       <div class="friend-av" style="width:26px;height:26px;font-size:10px;flex-shrink:0">${fInitials}</div>
       <span class="msg-thread-name">${escapeHtml(fName)}</span>
     </div>
-    <div class="msg-list" id="fp-msg-list">${msgsHTML}</div>
+    <div class="msg-list" id="fp-msg-list" style="flex:1;overflow-y:auto;padding:.65rem;display:flex;flex-direction:column;gap:.5rem">
+      <div style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.25);text-align:center">Loading messages...</div>
+    </div>
     <div class="msg-input-row">
-      <textarea class="msg-inp" id="fp-msg-inp" rows="1" placeholder="Message ${escapeHtml(fName)}..." onkeydown="fpMsgKey(event,'${fEmail}')"></textarea>
-      <button class="msg-send-btn" onclick="fpSendMsg('${fEmail}')">Send</button>
+      <textarea class="msg-inp" id="fp-msg-inp" rows="1" placeholder="Message ${escapeHtml(fName)}..." onkeydown="fpMsgKey(event,'${escapeHtml(fEmail)}','${escapeHtml(uid)}')"></textarea>
+      <button class="msg-send-btn" onclick="fpSendMsg('${escapeHtml(fEmail)}','${escapeHtml(uid)}')">Send</button>
     </div>
   </div>`;
 
-  // Scroll to bottom
-  const msgList = document.getElementById('fp-msg-list');
-  if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 50);
+  // Load messages from server
+  sbGetMessages(uid).then(function(msgs) {
+    const list = document.getElementById('fp-msg-list');
+    if (!list) return;
+    if (!msgs.length) { list.innerHTML = '<div class="fp-empty" style="margin-top:1rem">No messages yet. Say hello!</div>'; return; }
+    let html = '';
+    let lastDate = '';
+    msgs.forEach(function(msg) {
+      const d = new Date(msg.ts);
+      const dateStr = d.toLocaleDateString();
+      if (dateStr !== lastDate) { html += `<div class="msg-date-sep">${dateStr}</div>`; lastDate = dateStr; }
+      const isMine = msg.from === me;
+      const timeStr = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      html += `<div class="msg-bubble ${isMine?'mine':'theirs'}">${escapeHtml(msg.text)}<div class="msg-time">${timeStr}</div></div>`;
+    });
+    list.innerHTML = html;
+    list.scrollTop = list.scrollHeight;
+  }).catch(function(e) {
+    const list = document.getElementById('fp-msg-list');
+    if (list) list.innerHTML = '<div class="fp-empty">Could not load messages. Check your connection.</div>';
+  });
 }
 
-function fpMsgKey(e, fEmail) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fpSendMsg(fEmail); }
+function fpMsgKey(e, fEmail, uid) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fpSendMsg(fEmail, uid); }
 }
 
-function fpSendMsg(fEmail) {
+function fpSendMsg(fEmail, uid) {
   const inp = document.getElementById('fp-msg-inp');
   const text = inp ? inp.value.trim() : '';
   if (!text) return;
-  const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  friendsEnsureStructure(db, fEmail);
-  const tid = threadId(me, fEmail);
-  const msg = { from: me, text, ts: Date.now() };
-  // Write to MY messages
-  if (!db[me].messages[tid])  db[me].messages[tid]  = [];
-  db[me].messages[tid].push(msg);
-  // Write to THEIR messages (cross-user delivery)
-  if (!db[fEmail].messages[tid]) db[fEmail].messages[tid] = [];
-  db[fEmail].messages[tid].push(msg);
-  friendsSaveDB(db);
+  if (!currentUser) return;
   if (inp) inp.value = '';
-  fpRenderMsgThread(fEmail);
+  const targetId = uid || fpCurrentOtherUserId || fEmail;
+  const me = friendsGetMe();
+
+  // Optimistic UI — append immediately
+  const list = document.getElementById('fp-msg-list');
+  if (list) {
+    const emptyEl = list.querySelector('.fp-empty');
+    if (emptyEl) emptyEl.remove();
+    const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble mine';
+    bubble.innerHTML = escapeHtml(text) + '<div class="msg-time">' + timeStr + '</div>';
+    list.appendChild(bubble);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  sbSendMessage(targetId, text).catch(function(e) {
+    showToast('Message failed to send: ' + e.message);
+    // Remove optimistic bubble
+    if (list && list.lastChild) list.removeChild(list.lastChild);
+  });
 }
 
 // ── Settings page lists ──
 function friendsRefreshSettingsLists() {
   const me = friendsGetMe(); if (!me) return;
-  const db = friendsGetDB();
-  friendsEnsureStructure(db, me);
-  const user = db[me];
-
-  // Profile link
   const linkEl = document.getElementById('set-friends-link');
   if (linkEl) linkEl.textContent = 'ordeck.app/u/' + me;
-
-  // Requests
-  const reqEl = document.getElementById('set-requests-list');
-  if (reqEl) {
-    const reqs = user.requests || {};
-    const keys = Object.keys(reqs);
-    if (keys.length === 0) {
-      reqEl.innerHTML = '<div class="fp-empty" style="padding:.5rem 0">No incoming requests.</div>';
-    } else {
-      reqEl.innerHTML = keys.map(email => {
-        const r = reqs[email];
-        const name = r.name || email.split('@')[0];
-        const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        return friendCardHTML({ email, name, initials, online: false }, 'request');
+  sbGetFriends().then(function(rel) {
+    const reqEl = document.getElementById('set-requests-list');
+    if (reqEl) {
+      if (!rel.requests.length) reqEl.innerHTML = '<div class="fp-empty" style="padding:.5rem 0">No incoming requests.</div>';
+      else reqEl.innerHTML = rel.requests.map(f => {
+        const initials = (f.name||f.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        return friendCardHTML({ email: f.email, name: f.name||f.email.split('@')[0], initials, rowId: f.rowId }, 'request');
       }).join('');
     }
-  }
-
-  // Friends list
-  const flEl = document.getElementById('set-friends-list');
-  if (flEl) {
-    const friends = user.friends || {};
-    const keys = Object.keys(friends);
-    if (keys.length === 0) {
-      flEl.innerHTML = '<div class="fp-empty" style="padding:.5rem 0">No friends yet.</div>';
-    } else {
-      flEl.innerHTML = keys.map(fEmail => {
-        const fUser = db[fEmail];
-        const name = (fUser && fUser.name) || fEmail.split('@')[0];
-        const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        return friendCardHTML({ email: fEmail, name, initials, plan: fUser && fUser.plan }, 'friend');
+    const flEl = document.getElementById('set-friends-list');
+    if (flEl) {
+      if (!rel.friends.length) flEl.innerHTML = '<div class="fp-empty" style="padding:.5rem 0">No friends yet.</div>';
+      else flEl.innerHTML = rel.friends.map(f => {
+        const initials = (f.name||f.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        return friendCardHTML({ email: f.email, name: f.name||f.email.split('@')[0], initials, plan: f.plan, rowId: f.rowId }, 'friend');
       }).join('');
     }
-  }
+  }).catch(function(){});
 }
 
 // Refresh when friends settings tab is opened
@@ -4979,36 +4552,39 @@ function submitUpload() {
   const collab  = (document.getElementById('up-collab').value || '').trim();
   const license = document.getElementById('up-license').value;
   const collabs = collab ? collab.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const btn = document.querySelector('.upload-submit');
+  if (btn) { btn.textContent = 'Publishing...'; btn.disabled = true; }
 
   const proj = {
-    id:          projGenId(),
-    studio:      upStudio,
+    id:         projGenId(),
+    studio:     upStudio,
     name,
     desc,
-    visibility:  upVisibility,
-    tags:        [...upTags],
-    thumbUrl:    upThumbUrl,
+    visibility: upVisibility,
+    tags:       [...upTags],
+    thumbUrl:   upThumbUrl,
     license,
     collabs,
-    author:      currentUser.email,
-    authorName:  currentUser.name || currentUser.email.split('@')[0],
-    likes:       [],
-    comments:    [],
-    views:       0,
-    createdAt:   Date.now(),
-    updatedAt:   Date.now()
+    author:     currentUser.email,
+    authorName: currentUser.name || currentUser.email.split('@')[0],
+    likes:      [],
+    comments:   [],
+    views:      0,
+    createdAt:  Date.now(),
+    updatedAt:  Date.now()
   };
 
-  const all = projDBLoad();
-  all.unshift(proj);
-  projDBSave(all);
-
-  closeUploadModal();
-  showToast(`"${name}" published! ${upVisibility === 'private' ? '(Private)' : '🎉'}`)
-
-  // Refresh explore
-  exploreRender();
-  homeExploreRender();
+  sbPublishProject(proj).then(function() {
+    // Also save locally as fallback
+    const all = projDBLoad(); all.unshift(proj); projDBSave(all);
+    closeUploadModal();
+    if (btn) { btn.textContent = '⬆ Publish Project'; btn.disabled = false; }
+    showToast('"' + name + '" published! ' + (upVisibility === 'private' ? '(Private)' : '🎉'));
+    exploreRender(); homeExploreRender();
+  }).catch(function(e) {
+    if (btn) { btn.textContent = '⬆ Publish Project'; btn.disabled = false; }
+    showToast('Publish failed: ' + e.message);
+  });
 }
 
 // ── Explore / Browse ──
@@ -5057,27 +4633,56 @@ function exploreRender() {
   const grid = document.getElementById('explore-full-grid');
   const count = document.getElementById('explore-count');
   if (!grid) return;
-  const list = exploreGetFiltered();
-  if (count) count.textContent = list.length + ' project' + (list.length !== 1 ? 's' : '');
-  if (list.length === 0) {
-    grid.innerHTML = '<div class="explore-empty">No projects found.<br>Be the first — publish yours from any studio!</div>';
-    return;
-  }
-  grid.innerHTML = list.map(p => projCardHTML(p)).join('');
+  // Show local data immediately
+  const local = exploreGetFiltered();
+  if (local.length > 0) grid.innerHTML = local.map(p => projCardHTML(p)).join('');
+  else grid.innerHTML = '<div class="explore-empty">Loading projects...</div>';
+  // Then fetch from server and update
+  const studio = exploreFilterMode !== 'all' ? exploreFilterMode : null;
+  const search = (document.getElementById('explore-search') || {}).value || '';
+  const fetchFn = exploreSortMode === 'mine' ? sbGetMyProjects() :
+    sbGetPublishedProjects({ studio, sort: exploreSortMode, search });
+  fetchFn.then(function(list) {
+    if (!list || !list.length) {
+      if (!local.length) grid.innerHTML = '<div class="explore-empty">No projects found.<br>Be the first — publish yours from any studio!</div>';
+      return;
+    }
+    // Merge with local (server wins)
+    const localIds = new Set(local.map(p => p.id));
+    list.forEach(p => { if (!localIds.has(p.id)) { const all = projDBLoad(); all.unshift(p); projDBSave(all); } });
+    if (count) count.textContent = list.length + ' project' + (list.length !== 1 ? 's' : '');
+    grid.innerHTML = list.map(p => projCardHTML(p)).join('');
+  }).catch(function() {
+    // Server failed, show local
+    if (local.length === 0) grid.innerHTML = '<div class="explore-empty">No projects found.<br>Be the first — publish yours from any studio!</div>';
+    else grid.innerHTML = local.map(p => projCardHTML(p)).join('');
+  });
 }
 
 function homeExploreRender() {
   const grid = document.getElementById('home-explore-grid');
   if (!grid) return;
   const me = currentUser ? currentUser.email : null;
-  const all = projDBLoad().filter(p => p.visibility === 'public' || p.author === me);
-  let list = exploreFilterMode === 'all' ? all : all.filter(p => p.studio === exploreFilterMode);
-  list = list.slice(0, 6); // show max 6 on home
-  if (list.length === 0) {
-    grid.innerHTML = '<div class="explore-empty" style="padding:1.5rem">No public projects yet.<br>Publish yours from any studio!</div>';
-    return;
-  }
-  grid.innerHTML = list.map(p => projCardHTML(p)).join('');
+  // Show local first
+  const localAll = projDBLoad().filter(p => p.visibility === 'public' || p.author === me);
+  const localList = (exploreFilterMode === 'all' ? localAll : localAll.filter(p => p.studio === exploreFilterMode)).slice(0,6);
+  if (localList.length > 0) grid.innerHTML = localList.map(p => projCardHTML(p)).join('');
+  // Fetch from server
+  const studio = exploreFilterMode !== 'all' ? exploreFilterMode : null;
+  sbGetPublishedProjects({ studio, limit: 6 }).then(function(list) {
+    if (!list || !list.length) {
+      if (!localList.length) grid.innerHTML = '<div class="explore-empty" style="padding:1.5rem">No public projects yet.<br>Publish yours from any studio!</div>';
+      return;
+    }
+    // Merge to local cache
+    const localIds = new Set(localAll.map(p => p.id));
+    const all2 = projDBLoad();
+    list.forEach(p => { if (!localIds.has(p.id)) all2.unshift(p); });
+    projDBSave(all2);
+    grid.innerHTML = list.map(p => projCardHTML(p)).join('');
+  }).catch(function() {
+    if (localList.length === 0) grid.innerHTML = '<div class="explore-empty" style="padding:1.5rem">No public projects yet.</div>';
+  });
 }
 
 function projCardHTML(p) {
@@ -5118,18 +4723,23 @@ function projCardHTML(p) {
 
 // ── Project Detail View ──
 function openProjectView(id, backTo) {
-  const all = projDBLoad();
-  const p = all.find(proj => proj.id === id);
-  if (!p) { showToast('Project not found'); return; }
-  pvCurrentProject = p;
-  // Track view
-  p.views = (p.views || 0) + 1;
-  projDBSave(all);
-  // Back button
   const backBtn = document.getElementById('pv-back-btn');
   if (backBtn) backBtn.onclick = () => go(backTo || 's-explore');
-  pvRender(p);
   go('s-proj-view');
+  // Show local version immediately if available
+  const local = projDBLoad().find(proj => proj.id === id);
+  if (local) { pvCurrentProject = local; pvRender(local); }
+  // Fetch fresh from server
+  sbGetProject(id).then(function(p) {
+    if (!p) { if (!local) showToast('Project not found'); return; }
+    pvCurrentProject = p;
+    pvRender(p);
+    // Update local cache
+    const all = projDBLoad();
+    const idx = all.findIndex(x => x.id === id);
+    if (idx !== -1) all[idx] = p; else all.unshift(p);
+    projDBSave(all);
+  }).catch(function() { if (!local) showToast('Could not load project'); });
 }
 
 function pvRender(p) {
@@ -5244,67 +4854,57 @@ function pvSubmitComment() {
   const inp = document.getElementById('pv-comment-inp');
   const text = (inp ? inp.value : '').trim();
   if (!text || !pvCurrentProject) return;
-  const all = projDBLoad();
-  const p = all.find(proj => proj.id === pvCurrentProject.id);
-  if (!p) return;
-  if (!p.comments) p.comments = [];
-  p.comments.push({ author: currentUser.email, authorName: currentUser.name||currentUser.email.split('@')[0], text, ts: Date.now() });
-  projDBSave(all);
-  pvCurrentProject = p;
-  pvRenderComments(p);
   if (inp) inp.value = '';
-  // Update comment count in info
-  const infoRows = document.getElementById('pv-info-rows');
-  if (infoRows) {
-    const rows = infoRows.querySelectorAll('.pv-info-row');
-    rows.forEach(r => { if (r.querySelector('.pv-info-key') && r.querySelector('.pv-info-key').textContent==='Comments') r.querySelector('.pv-info-val').textContent = p.comments.length; });
-  }
+  sbAddComment(pvCurrentProject.id, text).then(function(cm) {
+    if (!pvCurrentProject.comments) pvCurrentProject.comments = [];
+    pvCurrentProject.comments.push(cm);
+    pvRenderComments(pvCurrentProject);
+    const infoRows = document.getElementById('pv-info-rows');
+    if (infoRows) {
+      infoRows.querySelectorAll('.pv-info-row').forEach(r => {
+        if (r.querySelector('.pv-info-key') && r.querySelector('.pv-info-key').textContent === 'Comments')
+          r.querySelector('.pv-info-val').textContent = pvCurrentProject.comments.length;
+      });
+    }
+  }).catch(function(e){ showToast('Comment failed: ' + e.message); });
 }
 
 function pvToggleLike() {
   if (!currentUser) { requireAuth(pvToggleLike); return; }
-  const me = currentUser.email;
-  const all = projDBLoad();
-  const p = all.find(proj => proj.id === pvCurrentProject.id);
-  if (!p) return;
-  if (!p.likes) p.likes = [];
-  const idx = p.likes.indexOf(me);
-  if (idx === -1) p.likes.push(me);
-  else p.likes.splice(idx, 1);
-  projDBSave(all);
-  pvCurrentProject = p;
-  const liked = p.likes.includes(me);
-  const likeBtn = document.getElementById('pv-like-btn');
-  const likeCount = document.getElementById('pv-like-count');
-  if (likeBtn) likeBtn.classList.toggle('liked', liked);
-  if (likeCount) likeCount.textContent = p.likes.length;
-  showToast(liked ? '❤️ Liked!' : 'Like removed');
+  if (!pvCurrentProject) return;
+  sbToggleLike(pvCurrentProject.id).then(function(liked) {
+    const likeBtn = document.getElementById('pv-like-btn');
+    const likeCount = document.getElementById('pv-like-count');
+    if (likeBtn) likeBtn.classList.toggle('liked', liked);
+    const cur = parseInt((likeCount||{}).textContent||'0');
+    if (likeCount) likeCount.textContent = liked ? cur + 1 : Math.max(0, cur - 1);
+    showToast(liked ? '❤️ Liked!' : 'Like removed');
+  }).catch(function(e){ showToast('Error: ' + e.message); });
 }
 
 function pvDeleteProject() {
   if (!pvCurrentProject) return;
   if (!confirm('Delete "' + pvCurrentProject.name + '"? This cannot be undone.')) return;
-  const all = projDBLoad().filter(p => p.id !== pvCurrentProject.id);
-  projDBSave(all);
-  pvCurrentProject = null;
-  showToast('Project deleted');
-  go('s-explore');
-  exploreRender();
-  homeExploreRender();
+  sbDeleteProject(pvCurrentProject.id).then(function() {
+    projDBSave(projDBLoad().filter(p => p.id !== pvCurrentProject.id));
+    pvCurrentProject = null;
+    showToast('Project deleted');
+    go('s-explore');
+    exploreRender(); homeExploreRender();
+  }).catch(function(e){ showToast('Delete failed: ' + e.message); });
 }
 
 function pvToggleVisibility() {
   if (!pvCurrentProject) return;
-  const all = projDBLoad();
-  const p = all.find(proj => proj.id === pvCurrentProject.id);
-  if (!p) return;
-  p.visibility = p.visibility === 'public' ? 'private' : 'public';
-  p.updatedAt = Date.now();
-  projDBSave(all);
-  pvCurrentProject = p;
-  const visLbl = document.getElementById('pv-vis-btn-lbl');
-  if (visLbl) visLbl.textContent = p.visibility==='public' ? 'Make private' : 'Make public';
-  showToast('Visibility set to ' + p.visibility);
+  const newVis = pvCurrentProject.visibility === 'public' ? 'private' : 'public';
+  sbToggleVisibility(pvCurrentProject.id, newVis).then(function() {
+    pvCurrentProject.visibility = newVis;
+    const all = projDBLoad(); const p = all.find(x => x.id === pvCurrentProject.id);
+    if (p) { p.visibility = newVis; projDBSave(all); }
+    const visLbl = document.getElementById('pv-vis-btn-lbl');
+    if (visLbl) visLbl.textContent = newVis === 'public' ? 'Make private' : 'Make public';
+    showToast('Visibility set to ' + newVis);
+  }).catch(function(e){ showToast('Error: ' + e.message); });
 }
 
 function pvShare() {
