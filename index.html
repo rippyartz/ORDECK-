@@ -737,6 +737,7 @@
   </div>
 </div>
 
+</div>
 
   <div class="enlarge-content" id="enlarge-content"></div>
 </div>
@@ -839,88 +840,20 @@
   </div>
   <div class="enlarge-content" id="enlarge-content"></div>
 </div>
-<script src="js/app.js"></script>
+<script src="js/supabase.js"></script>
+  <script src="js/app.js"></script>
 
 <!-- ADMIN PANEL -->
 <div class="screen z1" id="s-admin">
   <div class="admin-topbar">
     <span class="admin-logo"><i class="ti ti-shield-lock" aria-hidden="true"></i> ORDECK ADMIN</span>
     <span class="admin-badge">Root Access</span>
-    <div style="display:flex;align-items:center;gap:.5rem;margin-left:auto">
-      <span id="admin-live-clock" style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.35)"></span>
-      <button class="admin-cmd" style="padding:3px 9px" onclick="adminLoadStats()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
-      <button class="back-btn" onclick="go('s-home')" style="border-color:rgba(248,113,113,.25);color:rgba(248,113,113,.5)">← Home</button>
-    </div>
+    <button class="back-btn" onclick="go('s-home')" style="margin-left:auto;border-color:rgba(248,113,113,.25);color:rgba(248,113,113,.5)">← Home</button>
   </div>
   <div class="admin-body">
-
-    <!-- ① GLOBAL STATS: always-visible live counter row -->
-    <div class="admin-global-bar" id="admin-global-bar">
-      <div class="agb-tile"><div class="agb-v" id="agb-total">0</div><div class="agb-k"><i class="ti ti-users" aria-hidden="true"></i> Total Accounts</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-premium">0</div><div class="agb-k"><i class="ti ti-crown" aria-hidden="true"></i> Prototype+</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-standard">0</div><div class="agb-k"><i class="ti ti-user" aria-hidden="true"></i> Standard</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-online">0</div><div class="agb-k"><i class="ti ti-wifi" aria-hidden="true"></i> Online (5 min)</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-projects">0</div><div class="agb-k"><i class="ti ti-folder" aria-hidden="true"></i> Projects</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-friends">0</div><div class="agb-k"><i class="ti ti-heart" aria-hidden="true"></i> Friendships</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-storage">0 KB</div><div class="agb-k"><i class="ti ti-database" aria-hidden="true"></i> Storage Used</div></div>
-      <div class="agb-tile"><div class="agb-v" id="agb-codes">0</div><div class="agb-k"><i class="ti ti-ticket" aria-hidden="true"></i> Active Codes</div></div>
-    </div>
-
-    <!-- Existing: Platform Stats card grid -->
     <div class="admin-section-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Platform Stats</div>
     <div class="admin-grid" id="admin-stats-grid"></div>
 
-    <!-- ② APP HEALTH DASHBOARD -->
-    <div class="admin-section-title"><i class="ti ti-heart-rate-monitor" aria-hidden="true"></i> App Health</div>
-    <div class="admin-grid" id="admin-health-grid">
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-activity" aria-hidden="true"></i> System Status</div>
-        <div class="admin-stat"><span class="admin-stat-k">Web Audio API</span><span class="admin-stat-v" id="hs-audio" style="color:#34d399">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">MediaRecorder</span><span class="admin-stat-v" id="hs-recorder" style="color:#34d399">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">localStorage</span><span class="admin-stat-v" id="hs-storage" style="color:#34d399">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Canvas 2D</span><span class="admin-stat-v" id="hs-canvas" style="color:#34d399">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Online</span><span class="admin-stat-v" id="hs-network" style="color:#34d399">—</span></div>
-        <button class="admin-cmd" onclick="adminRunHealthCheck()"><i class="ti ti-refresh" aria-hidden="true"></i> Run checks</button>
-      </div>
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-chart-area" aria-hidden="true"></i> Activity Heatmap (Today)</div>
-        <div id="admin-heatmap" class="admin-heatmap"></div>
-        <div style="font-family:var(--mono);font-size:8px;color:rgba(248,113,113,.3);margin-top:.4rem">Each block = 1 hr · darker = more actions</div>
-      </div>
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-brand-javascript" aria-hidden="true"></i> Runtime Info</div>
-        <div class="admin-stat"><span class="admin-stat-k">User Agent</span><span class="admin-stat-v" id="hs-ua" style="font-size:8px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Screen</span><span class="admin-stat-v" id="hs-screen">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Language</span><span class="admin-stat-v" id="hs-lang">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Time Zone</span><span class="admin-stat-v" id="hs-tz">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-k">Session start</span><span class="admin-stat-v" id="hs-session">—</span></div>
-      </div>
-    </div>
-
-    <!-- ③ SESSION / USER MONITOR -->
-    <div class="admin-section-title"><i class="ti ti-eye" aria-hidden="true"></i> Live Session Monitor</div>
-    <div class="admin-grid">
-      <div class="admin-card" style="grid-column:1 / -1">
-        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
-          <input class="admin-inp" id="admin-session-filter" placeholder="Filter by email or plan…" oninput="adminRenderSessions(this.value)" style="flex:1">
-          <select class="admin-inp" id="admin-session-sort" onchange="adminRenderSessions()" style="width:140px">
-            <option value="recent">Most recent</option>
-            <option value="name">Name A-Z</option>
-            <option value="plan">Plan</option>
-            <option value="projects">Projects ↓</option>
-          </select>
-          <button class="admin-cmd" onclick="adminRenderSessions()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
-        </div>
-        <div class="admin-session-table">
-          <div class="admin-session-hd">
-            <span>User</span><span>Plan</span><span>Studio</span><span>Projects</span><span>Last Seen</span><span>Actions</span>
-          </div>
-          <div id="admin-session-body"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Existing: User Management -->
     <div class="admin-section-title"><i class="ti ti-users" aria-hidden="true"></i> User Management</div>
     <div class="admin-grid">
       <div class="admin-card">
@@ -930,7 +863,7 @@
         <div id="admin-user-result" style="font-family:var(--mono);font-size:11px;color:rgba(248,113,113,.6);min-height:20px"></div>
       </div>
       <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-crown" aria-hidden="true"></i> Grant / Revoke Premium</div>
+        <div class="admin-card-title"><i class="ti ti-crown" aria-hidden="true"></i> Grant Premium</div>
         <input class="admin-inp" id="admin-grant-email" type="email" placeholder="user@email.com">
         <button class="admin-cmd" onclick="adminGrantPremium()"><i class="ti ti-star" aria-hidden="true"></i> Grant Prototype+</button>
         <button class="admin-cmd" onclick="adminRevokePremium()"><i class="ti ti-star-off" aria-hidden="true"></i> Revoke Premium</button>
@@ -939,53 +872,9 @@
         <div class="admin-card-title"><i class="ti ti-trash" aria-hidden="true"></i> Delete Account</div>
         <input class="admin-inp" id="admin-del-email" type="email" placeholder="user@email.com">
         <button class="admin-cmd" onclick="adminDeleteUser()" style="color:#f87171"><i class="ti ti-user-x" aria-hidden="true"></i> Delete user permanently</button>
-        <button class="admin-cmd" onclick="adminBanUser()" style="color:#f87171"><i class="ti ti-ban" aria-hidden="true"></i> Ban + lock account</button>
       </div>
     </div>
 
-    <!-- ④ BULK ACTIONS -->
-    <div class="admin-section-title"><i class="ti ti-list-check" aria-hidden="true"></i> Bulk Actions</div>
-    <div class="admin-grid">
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-checks" aria-hidden="true"></i> Batch Operations</div>
-        <button class="admin-cmd" onclick="adminBulkGrantPremium()"><i class="ti ti-crown" aria-hidden="true"></i> Grant Premium to ALL users</button>
-        <button class="admin-cmd" onclick="adminBulkRevokePremium()"><i class="ti ti-star-off" aria-hidden="true"></i> Revoke Premium from ALL users</button>
-        <button class="admin-cmd" onclick="adminBulkExportUsers()"><i class="ti ti-download" aria-hidden="true"></i> Export all users as CSV</button>
-        <button class="admin-cmd" onclick="adminBulkClearInactive()"><i class="ti ti-user-x" aria-hidden="true"></i> Remove inactive users (30+ days)</button>
-        <button class="admin-cmd" onclick="adminBulkResetAvatars()"><i class="ti ti-user-circle" aria-hidden="true"></i> Reset all display names</button>
-      </div>
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-file-import" aria-hidden="true"></i> Import / Export</div>
-        <button class="admin-cmd" onclick="adminExportDB()"><i class="ti ti-download" aria-hidden="true"></i> Export full DB (JSON)</button>
-        <label class="admin-cmd" style="cursor:pointer"><i class="ti ti-upload" aria-hidden="true"></i> Import DB (JSON) <input type="file" accept=".json" style="display:none" onchange="adminImportDB(event)"></label>
-        <button class="admin-cmd" onclick="adminBulkExportUsers()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Export users (CSV)</button>
-        <button class="admin-cmd" onclick="adminClearProjects()"><i class="ti ti-files-off" aria-hidden="true"></i> Clear all projects</button>
-      </div>
-      <div class="admin-card">
-        <div class="admin-card-title"><i class="ti ti-message-report" aria-hidden="true"></i> Mass Email (log only)</div>
-        <textarea class="admin-inp" id="admin-mass-msg" rows="3" placeholder="Compose a message for all users…"></textarea>
-        <select class="admin-inp" id="admin-mass-target" style="margin-top:.3rem">
-          <option value="all">All users</option>
-          <option value="premium">Premium only</option>
-          <option value="standard">Standard only</option>
-        </select>
-        <button class="admin-cmd" onclick="adminMassMessage()"><i class="ti ti-send" aria-hidden="true"></i> Send mass message</button>
-      </div>
-    </div>
-
-    <!-- ⑤ FEATURE FLAGS -->
-    <div class="admin-section-title"><i class="ti ti-toggle-right" aria-hidden="true"></i> Feature Flags</div>
-    <div class="admin-grid">
-      <div class="admin-card" style="grid-column:1 / -1">
-        <div class="admin-flags" id="admin-flags-list"></div>
-        <div style="display:flex;gap:.5rem;margin-top:.55rem;flex-wrap:wrap">
-          <input class="admin-inp" id="admin-new-flag" placeholder="New flag name…" style="flex:1">
-          <button class="admin-cmd" style="padding:4px 10px" onclick="adminAddFlag()"><i class="ti ti-plus" aria-hidden="true"></i> Add flag</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Existing: Platform Controls -->
     <div class="admin-section-title"><i class="ti ti-settings" aria-hidden="true"></i> Platform Controls</div>
     <div class="admin-grid">
       <div class="admin-card">
@@ -1003,31 +892,114 @@
       <div class="admin-card">
         <div class="admin-card-title"><i class="ti ti-key" aria-hidden="true"></i> Coupon Codes</div>
         <input class="admin-inp" id="admin-new-code" type="text" placeholder="New coupon code">
-        <select class="admin-inp" id="admin-code-reward" style="margin-top:.3rem">
-          <option value="prototype-plus">Prototype+</option>
-          <option value="admin">Admin Access</option>
-        </select>
         <button class="admin-cmd" onclick="adminAddCode()"><i class="ti ti-plus" aria-hidden="true"></i> Add coupon code</button>
         <div id="admin-codes-list" style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);margin-top:.35rem;line-height:1.8"></div>
       </div>
     </div>
 
-    <!-- Existing: Console + ⑥ QUICK COMMANDS -->
-    <div class="admin-section-title"><i class="ti ti-terminal" aria-hidden="true"></i> Console</div>
-    <div style="max-width:700px">
-      <div class="admin-quick-cmds">
-        <button class="admin-qcmd" onclick="adminConsoleRun('users')">users</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('premium-me')">premium-me</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('export')">export</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('health')">health</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('stats')">stats</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('flags')">flags</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('sessions')">sessions</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('clear')">clear</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('help')">help</button>
-        <button class="admin-qcmd" onclick="adminConsoleRun('nuke')">nuke</button>
+
+    <div class="admin-section-title"><i class="ti ti-chart-line" aria-hidden="true"></i> Growth Analytics</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Account Growth</div>
+        <div id="admin-growth-stats"></div>
+        <canvas id="admin-growth-chart" height="80" style="margin-top:.5rem;width:100%"></canvas>
       </div>
-      <input class="admin-inp" id="admin-console-inp" placeholder="Type a command and press Enter…" onkeydown="adminConsoleKey(event)" style="width:100%;margin-bottom:.3rem">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-activity" aria-hidden="true"></i> Platform Activity</div>
+        <div id="admin-activity-stats"></div>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-world" aria-hidden="true"></i> Published Projects</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-music" aria-hidden="true"></i> By Studio</div>
+        <div id="admin-proj-stats"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-star" aria-hidden="true"></i> Top Projects</div>
+        <div id="admin-top-projs"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-flag" aria-hidden="true"></i> Moderate Projects</div>
+        <div id="admin-proj-moderate-list" style="max-height:120px;overflow-y:auto;margin-bottom:.35rem"></div>
+        <input class="admin-inp" id="admin-remove-proj-id" placeholder="Project ID to remove">
+        <button class="admin-cmd" onclick="adminRemoveProject()" style="color:#f87171"><i class="ti ti-trash" aria-hidden="true"></i> Remove project by ID</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-users-group" aria-hidden="true"></i> Friend & Message Network</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-network" aria-hidden="true"></i> Social Stats</div>
+        <div id="admin-social-stats"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-message-report" aria-hidden="true"></i> Message Volume</div>
+        <div id="admin-msg-stats"></div>
+        <button class="admin-cmd" onclick="adminClearAllMessages()" style="color:#f87171;margin-top:.35rem"><i class="ti ti-messages-off" aria-hidden="true"></i> Clear ALL messages</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-lock" aria-hidden="true"></i> Security & Sessions</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-eye" aria-hidden="true"></i> Active Sessions</div>
+        <div id="admin-sessions-list"></div>
+        <button class="admin-cmd" onclick="adminKillAllSessions()" style="color:#f87171;margin-top:.35rem"><i class="ti ti-logout" aria-hidden="true"></i> Force logout ALL users</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-ban" aria-hidden="true"></i> Ban / Unban</div>
+        <input class="admin-inp" id="admin-ban-email" type="email" placeholder="user@email.com">
+        <button class="admin-cmd" onclick="adminBanUser()"><i class="ti ti-ban" aria-hidden="true"></i> Ban user</button>
+        <button class="admin-cmd" onclick="adminUnbanUser()"><i class="ti ti-circle-check" aria-hidden="true"></i> Unban user</button>
+        <div style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.4);margin-top:.35rem">Banned users cannot log in.</div>
+        <div id="admin-banned-list" style="margin-top:.4rem;font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);max-height:80px;overflow-y:auto"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-shield-check" aria-hidden="true"></i> Audit Log</div>
+        <div class="admin-log" id="admin-audit-log" style="height:130px"></div>
+        <button class="admin-cmd" onclick="adminClearAudit()" style="margin-top:.35rem"><i class="ti ti-eraser" aria-hidden="true"></i> Clear audit log</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-palette" aria-hidden="true"></i> Platform Customisation</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-speakerphone" aria-hidden="true"></i> MOTD Banner</div>
+        <textarea class="admin-inp" id="admin-motd-text" rows="2" placeholder="Message of the day shown on home screen..."></textarea>
+        <div style="display:flex;gap:.35rem;align-items:center;margin-bottom:.35rem">
+          <select class="admin-inp" id="admin-motd-type" style="flex:1;cursor:pointer">
+            <option value="info">ℹ Info</option>
+            <option value="success">✅ Success</option>
+            <option value="warning">⚠️ Warning</option>
+            <option value="error">🚨 Alert</option>
+          </select>
+        </div>
+        <button class="admin-cmd" onclick="adminSetMOTD()"><i class="ti ti-check" aria-hidden="true"></i> Set banner</button>
+        <button class="admin-cmd" onclick="adminClearMOTD()"><i class="ti ti-x" aria-hidden="true"></i> Clear banner</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-tools" aria-hidden="true"></i> Maintenance Mode</div>
+        <div id="admin-maint-status" style="font-family:var(--mono);font-size:11px;color:rgba(52,211,153,.6);margin-bottom:.5rem">● System online</div>
+        <textarea class="admin-inp" id="admin-maint-msg" rows="2" placeholder="Maintenance message to show users..."></textarea>
+        <button class="admin-cmd" onclick="adminToggleMaintenance()"><i class="ti ti-tool" aria-hidden="true"></i> Toggle maintenance mode</button>
+        <div class="admin-card-title" style="margin-top:.75rem"><i class="ti ti-discount" aria-hidden="true"></i> Bulk Grant Premium</div>
+        <button class="admin-cmd" onclick="adminGrantAllPremium()"><i class="ti ti-crown" aria-hidden="true"></i> Grant Prototype+ to ALL users</button>
+        <button class="admin-cmd" onclick="adminRevokeAllPremium()" style="color:#f87171"><i class="ti ti-crown-off" aria-hidden="true"></i> Revoke all premium</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-download" aria-hidden="true"></i> Data Export</div>
+        <button class="admin-cmd" onclick="adminExportDB()"><i class="ti ti-database" aria-hidden="true"></i> Export full DB (JSON)</button>
+        <button class="admin-cmd" onclick="adminExportUsers()"><i class="ti ti-users" aria-hidden="true"></i> Export users CSV</button>
+        <button class="admin-cmd" onclick="adminExportProjects()"><i class="ti ti-folder" aria-hidden="true"></i> Export projects JSON</button>
+        <button class="admin-cmd" onclick="adminImportDB()"><i class="ti ti-upload" aria-hidden="true"></i> Import DB backup</button>
+      </div>
+    </div>
+    <div class="admin-section-title"><i class="ti ti-terminal" aria-hidden="true"></i> Console</div>
+    <div style="max-width:600px">
+      <input class="admin-inp" id="admin-console-inp" placeholder="Type a command..." onkeydown="adminConsoleKey(event)">
       <div class="admin-log" id="admin-log"></div>
     </div>
   </div>
