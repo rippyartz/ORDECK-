@@ -86,6 +86,7 @@
     <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
     <div class="nav-right">
       <button class="nbtn" onclick="go('s-explore')" style="border-color:rgba(34,211,238,.22);color:rgba(34,211,238,.55)"><i class="ti ti-compass" aria-hidden="true"></i> Explore</button>
+      <button class="nbtn" onclick="go('s-groups')" style="border-color:rgba(251,191,36,.22);color:rgba(251,191,36,.65)" id="groups-nav-btn"><i class="ti ti-users-group" aria-hidden="true"></i> Groups</button>
       <button class="nbtn" id="home-upgrade-btn" style="border-color:rgba(139,92,246,.28);color:rgba(139,92,246,.65)" onclick="go('s-payment')">Upgrade ↗</button>
       <button class="friends-nav-btn" onclick="friendsOpen()" title="Friends" id="friends-nav-btn"><i class="ti ti-users" aria-hidden="true"></i><span class="friends-notif-dot" id="friends-notif-dot"></span></button>
       <div class="nav-av" onclick="go('s-settings')" id="home-nav-av">ZK</div>
@@ -737,7 +738,6 @@
   </div>
 </div>
 
-</div>
 
   <div class="enlarge-content" id="enlarge-content"></div>
 </div>
@@ -1005,6 +1005,141 @@
   </div>
 </div>
 
+
+<!-- GROUPS SCREEN -->
+<div class="screen z1" id="s-groups" style="background:var(--bg);flex-direction:column">
+  <div class="app-nav">
+    <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+    <div class="nav-right">
+      <button class="nbtn" onclick="grpOpenCreate()" style="border-color:rgba(251,191,36,.3);color:rgba(251,191,36,.7)"><i class="ti ti-plus" aria-hidden="true"></i> New Group</button>
+      <button class="back-btn" onclick="go('s-home')">← Home</button>
+    </div>
+  </div>
+  <div class="grp-layout">
+    <!-- LEFT: my groups list -->
+    <div class="grp-sidebar">
+      <div class="grp-sidebar-hd">
+        <span><i class="ti ti-users-group" aria-hidden="true"></i> My Groups</span>
+        <button class="grp-join-btn" onclick="grpOpenJoin()"><i class="ti ti-hash" aria-hidden="true"></i> Join</button>
+      </div>
+      <div class="grp-list" id="grp-list"></div>
+      <div class="grp-sidebar-hd" style="margin-top:.7rem">
+        <span><i class="ti ti-world" aria-hidden="true"></i> Public Groups</span>
+      </div>
+      <div class="grp-list" id="grp-public-list"></div>
+    </div>
+    <!-- RIGHT: active group view -->
+    <div class="grp-main" id="grp-main">
+      <div class="grp-empty-state" id="grp-empty">
+        <i class="ti ti-users-group" style="font-size:38px;color:rgba(251,191,36,.25)" aria-hidden="true"></i>
+        <div style="font-family:var(--mono);font-size:13px;color:rgba(251,191,36,.4);margin-top:.7rem">Select or create a group</div>
+        <div style="font-size:11px;color:rgba(200,200,220,.25);margin-top:.35rem">Collaborate on projects, share ideas, and chat with your team</div>
+        <button class="grp-cta" onclick="grpOpenCreate()"><i class="ti ti-plus" aria-hidden="true"></i> Create your first group</button>
+        <button class="grp-cta-sec" onclick="grpOpenJoin()"><i class="ti ti-hash" aria-hidden="true"></i> Join with invite code</button>
+      </div>
+      <div id="grp-view" style="display:none;flex:1;display:none;flex-direction:column;height:100%">
+        <!-- Group header -->
+        <div class="grp-view-hd">
+          <div class="grp-avatar-lg" id="grp-view-avatar">🎵</div>
+          <div class="grp-view-info">
+            <div class="grp-view-name" id="grp-view-name">Group Name</div>
+            <div class="grp-view-desc" id="grp-view-desc">Description</div>
+            <div class="grp-view-meta" id="grp-view-meta"></div>
+          </div>
+          <div class="grp-view-actions" id="grp-view-actions"></div>
+        </div>
+        <!-- Tabs -->
+        <div class="grp-tabs">
+          <div class="grp-tab sel" onclick="grpTab(this,'grp-tab-chat')"><i class="ti ti-message-2" aria-hidden="true"></i> Chat</div>
+          <div class="grp-tab" onclick="grpTab(this,'grp-tab-projects')"><i class="ti ti-folder" aria-hidden="true"></i> Projects</div>
+          <div class="grp-tab" onclick="grpTab(this,'grp-tab-members')"><i class="ti ti-users" aria-hidden="true"></i> Members</div>
+          <div class="grp-tab" onclick="grpTab(this,'grp-tab-settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+        </div>
+        <!-- CHAT TAB -->
+        <div class="grp-tab-body sel" id="grp-tab-chat">
+          <div class="grp-chat-msgs" id="grp-chat-msgs"></div>
+          <div class="grp-chat-input-row">
+            <input class="grp-chat-inp" id="grp-chat-inp" placeholder="Message the group…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();grpSendMessage()}">
+            <button class="grp-chat-send" onclick="grpSendMessage()"><i class="ti ti-send" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <!-- PROJECTS TAB -->
+        <div class="grp-tab-body" id="grp-tab-projects">
+          <div class="grp-projects-bar">
+            <span style="font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.4);letter-spacing:.1em">GROUP PROJECTS</span>
+            <button class="grp-sm-btn" onclick="grpShareCurrentProject()"><i class="ti ti-upload" aria-hidden="true"></i> Share current project</button>
+          </div>
+          <div class="grp-projects-grid" id="grp-projects-grid"></div>
+        </div>
+        <!-- MEMBERS TAB -->
+        <div class="grp-tab-body" id="grp-tab-members">
+          <div class="grp-projects-bar">
+            <span style="font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.4);letter-spacing:.1em">MEMBERS</span>
+            <div style="display:flex;gap:.4rem">
+              <input class="grp-invite-inp" id="grp-invite-email" placeholder="Email to invite…" onkeydown="if(event.key==='Enter')grpInvite()">
+              <button class="grp-sm-btn" onclick="grpInvite()"><i class="ti ti-user-plus" aria-hidden="true"></i> Invite</button>
+            </div>
+          </div>
+          <div class="grp-invite-code-row" id="grp-invite-code-row"></div>
+          <div class="grp-members-list" id="grp-members-list"></div>
+        </div>
+        <!-- SETTINGS TAB -->
+        <div class="grp-tab-body" id="grp-tab-settings">
+          <div class="grp-settings-form" id="grp-settings-form">
+            <div class="grp-settings-row"><label class="grp-settings-lbl">Group Name</label><input class="grp-settings-inp" id="grps-name" placeholder="My Group"></div>
+            <div class="grp-settings-row"><label class="grp-settings-lbl">Description</label><input class="grp-settings-inp" id="grps-desc" placeholder="What is this group about?"></div>
+            <div class="grp-settings-row"><label class="grp-settings-lbl">Avatar (emoji)</label><input class="grp-settings-inp" id="grps-avatar" placeholder="🎵" style="width:60px"></div>
+            <div class="grp-settings-row"><label class="grp-settings-lbl">Visibility</label>
+              <select class="grp-settings-inp" id="grps-vis">
+                <option value="private">🔒 Private (invite only)</option>
+                <option value="public">🌐 Public (anyone can see)</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:.5rem;margin-top:.7rem">
+              <button class="grp-sm-btn" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24" onclick="grpSaveSettings()"><i class="ti ti-check" aria-hidden="true"></i> Save changes</button>
+              <button class="grp-sm-btn" style="border-color:rgba(248,113,113,.2);color:rgba(248,113,113,.5)" onclick="grpLeave()"><i class="ti ti-door-exit" aria-hidden="true"></i> Leave group</button>
+              <button class="grp-sm-btn danger" id="grp-delete-btn" style="display:none" onclick="grpDelete()"><i class="ti ti-trash" aria-hidden="true"></i> Delete group</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE GROUP MODAL -->
+<div class="modal-overlay" id="grp-create-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-hd"><span class="modal-title"><i class="ti ti-users-group" aria-hidden="true"></i> Create Group</span><button class="modal-x" onclick="grpCloseCreate()">✕</button></div>
+    <div class="modal-body">
+      <div class="grp-settings-row"><label class="grp-settings-lbl">Name <span style="color:#f87171">*</span></label><input class="grp-settings-inp" id="grpc-name" placeholder="e.g. Beat Makers" style="width:100%"></div>
+      <div class="grp-settings-row"><label class="grp-settings-lbl">Description</label><input class="grp-settings-inp" id="grpc-desc" placeholder="What is this group about?" style="width:100%"></div>
+      <div class="grp-settings-row" style="display:flex;gap:.5rem">
+        <div style="flex:0 0 auto"><label class="grp-settings-lbl">Avatar</label><input class="grp-settings-inp" id="grpc-avatar" placeholder="🎵" style="width:52px;text-align:center;font-size:18px"></div>
+        <div style="flex:1"><label class="grp-settings-lbl">Visibility</label>
+          <select class="grp-settings-inp" id="grpc-vis" style="width:100%">
+            <option value="private">🔒 Private</option>
+            <option value="public">🌐 Public</option>
+          </select>
+        </div>
+      </div>
+      <button class="set-btn p" onclick="grpCreate()" style="margin-top:.6rem;width:100%;padding:.6rem"><i class="ti ti-plus" aria-hidden="true"></i> Create group</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN GROUP MODAL -->
+<div class="modal-overlay" id="grp-join-modal" style="display:none">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-hd"><span class="modal-title"><i class="ti ti-hash" aria-hidden="true"></i> Join a Group</span><button class="modal-x" onclick="grpCloseJoin()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:rgba(200,200,220,.4);margin-bottom:.7rem">Enter the 8-character invite code from your group admin.</p>
+      <input class="grp-settings-inp" id="grpj-code" placeholder="e.g. A1B2C3D4" style="width:100%;text-transform:uppercase;font-family:var(--mono);font-size:14px;letter-spacing:.15em;text-align:center" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+      <div id="grpj-err" style="color:#f87171;font-size:10px;margin-top:.3rem;min-height:14px"></div>
+      <button class="set-btn p" onclick="grpJoin()" style="margin-top:.6rem;width:100%;padding:.6rem"><i class="ti ti-login" aria-hidden="true"></i> Join group</button>
+    </div>
+  </div>
+</div>
 
 <!-- FRIENDS PANEL -->
 <div class="friends-panel" id="friends-panel">

@@ -367,3 +367,148 @@ function lsRemoveFriend(rowId) { const db=dbLoad(); const s=sessionLoad(); const
 function lsGetMessages(otherId) { const db=dbLoad(); const s=sessionLoad(); const me=db[s?.email]; if(!me)return[]; const tid=[s.email,otherId].sort().join('__'); return (me.messages?.[tid]||[]).map(m=>({...m,from:m.from||m.sender})); }
 function lsSendMessage(otherId, text) { const db=dbLoad(); const s=sessionLoad(); const me=db[s?.email]; const other=db[otherId]; if(!me||!other)throw new Error('User not found'); const tid=[s.email,otherId].sort().join('__'); const msg={id:'m'+Date.now(),from:s.email,fromName:me.name,text,ts:Date.now()}; if(!me.messages)me.messages={}; if(!other.messages)other.messages={}; if(!me.messages[tid])me.messages[tid]=[]; if(!other.messages[tid])other.messages[tid]=[]; me.messages[tid].push(msg); other.messages[tid].push(msg); dbSave(db); return msg; }
 function lsGetUnreadCount() { const db=dbLoad(); const s=sessionLoad(); const me=db[s?.email]; if(!me)return 0; let n=0; Object.values(me.messages||{}).forEach(t=>{ t.forEach(m=>{if(m.from!==s.email&&!m.read)n++;}); }); return n; }
+
+// ─────────────────────────────────────────────────────
+//  GROUPS / TEAMS
+// ─────────────────────────────────────────────────────
+async function sbCreateGroup(name, description, avatar, visibility) {
+  if (!sbConfigured()) return lsCreateGroup(name, description, avatar, visibility);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  const { data, error } = await _sb.from('groups').insert({ name, description, avatar: avatar||'🎵', owner: user.id, visibility: visibility||'private' }).select().single();
+  if (error) throw error;
+  // Auto-add owner as member
+  await _sb.from('group_members').insert({ group_id: data.id, user_id: user.id, role: 'owner' });
+  return data;
+}
+
+async function sbGetMyGroups() {
+  if (!sbConfigured()) return lsGetMyGroups();
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) return [];
+  const { data } = await _sb.from('group_members')
+    .select(`role, joined_at, groups(id, name, description, avatar, visibility, invite_code, owner, created_at, group_members(count))`)
+    .eq('user_id', user.id);
+  return (data||[]).map(r => ({ ...r.groups, myRole: r.role, joined: r.joined_at, memberCount: r.groups?.group_members?.[0]?.count || 1 }));
+}
+
+async function sbGetGroup(groupId) {
+  if (!sbConfigured()) return lsGetGroup(groupId);
+  const { data } = await _sb.from('groups').select(`*, group_members(id, role, joined_at, user_id, profile:profiles!user_id(name,email,plan))`).eq('id', groupId).single();
+  if (!data) return null;
+  return { ...data, members: (data.group_members||[]).map(m => ({ id: m.id, userId: m.user_id, role: m.role, name: m.profile?.name, email: m.profile?.email, plan: m.profile?.plan, joined: m.joined_at })) };
+}
+
+async function sbJoinGroupByCode(code) {
+  if (!sbConfigured()) return lsJoinGroupByCode(code);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  const { data: grp } = await _sb.from('groups').select('id,name').eq('invite_code', code.toUpperCase()).single();
+  if (!grp) throw new Error('Invalid invite code');
+  const { error } = await _sb.from('group_members').insert({ group_id: grp.id, user_id: user.id, role: 'member' });
+  if (error && error.code === '23505') throw new Error('Already a member');
+  if (error) throw error;
+  return grp;
+}
+
+async function sbUpdateGroup(groupId, updates) {
+  if (!sbConfigured()) return lsUpdateGroup(groupId, updates);
+  await _sb.from('groups').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', groupId);
+}
+
+async function sbDeleteGroup(groupId) {
+  if (!sbConfigured()) return lsDeleteGroup(groupId);
+  await _sb.from('groups').delete().eq('id', groupId);
+}
+
+async function sbInviteMember(groupId, email) {
+  if (!sbConfigured()) return lsInviteMember(groupId, email);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  const { data: target } = await _sb.from('profiles').select('id').eq('email', email).single();
+  if (!target) throw new Error('User not found');
+  const { error } = await _sb.from('group_members').insert({ group_id: groupId, user_id: target.id, role: 'member' });
+  if (error && error.code === '23505') throw new Error('Already a member');
+  if (error) throw error;
+}
+
+async function sbSetMemberRole(groupId, userId, role) {
+  if (!sbConfigured()) return lsSetMemberRole(groupId, userId, role);
+  await _sb.from('group_members').update({ role }).eq('group_id', groupId).eq('user_id', userId);
+}
+
+async function sbRemoveMember(groupId, userId) {
+  if (!sbConfigured()) return lsRemoveMember(groupId, userId);
+  await _sb.from('group_members').delete().eq('group_id', groupId).eq('user_id', userId);
+}
+
+async function sbLeaveGroup(groupId) {
+  if (!sbConfigured()) return lsLeaveGroup(groupId);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  await _sb.from('group_members').delete().eq('group_id', groupId).eq('user_id', user.id);
+}
+
+// Group chat
+let _grpChatChannel = null;
+async function sbGetGroupMessages(groupId) {
+  if (!sbConfigured()) return lsGetGroupMessages(groupId);
+  const { data } = await _sb.from('group_messages')
+    .select(`*, sender_profile:profiles!sender(name,email)`)
+    .eq('group_id', groupId).order('created_at', { ascending: true }).limit(100);
+  return (data||[]).map(m => ({ id: m.id, from: m.sender_profile?.email, fromName: m.sender_profile?.name, text: m.text, ts: new Date(m.created_at).getTime() }));
+}
+async function sbSendGroupMessage(groupId, text) {
+  if (!sbConfigured()) return lsSendGroupMessage(groupId, text);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  const { data, error } = await _sb.from('group_messages').insert({ group_id: groupId, sender: user.id, text }).select(`*, sender_profile:profiles!sender(name,email)`).single();
+  if (error) throw error;
+  return { id: data.id, from: data.sender_profile?.email, fromName: data.sender_profile?.name, text: data.text, ts: new Date(data.created_at).getTime() };
+}
+function sbSubscribeGroupChat(groupId, callback) {
+  if (!sbConfigured()) return null;
+  if (_grpChatChannel) _grpChatChannel.unsubscribe();
+  _grpChatChannel = _sb.channel('group-chat-' + groupId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` }, p => callback(p.new))
+    .subscribe();
+  return _grpChatChannel;
+}
+function sbUnsubscribeGroupChat() { if (_grpChatChannel) { _grpChatChannel.unsubscribe(); _grpChatChannel = null; } }
+
+// Group projects
+async function sbSaveGroupProject(groupId, proj) {
+  if (!sbConfigured()) return lsSaveGroupProject(groupId, proj);
+  const { data: { user } } = await _sb.auth.getUser(); if (!user) throw new Error('Not logged in');
+  const row = { id: proj.id, group_id: groupId, author: user.id, studio: proj.studio, name: proj.name, data: proj, updated_at: new Date().toISOString() };
+  const { error } = await _sb.from('group_projects').upsert(row);
+  if (error) throw error;
+}
+async function sbGetGroupProjects(groupId) {
+  if (!sbConfigured()) return lsGetGroupProjects(groupId);
+  const { data } = await _sb.from('group_projects')
+    .select(`*, author_profile:profiles!author(name,email)`).eq('group_id', groupId).order('updated_at', { ascending: false });
+  return (data||[]).map(r => ({ ...r.data, id: r.id, name: r.name, studio: r.studio, author: r.author_profile?.email, authorName: r.author_profile?.name, pinned: r.pinned, updatedAt: new Date(r.updated_at).getTime() }));
+}
+async function sbDeleteGroupProject(projId) {
+  if (!sbConfigured()) return lsDeleteGroupProject(projId);
+  await _sb.from('group_projects').delete().eq('id', projId);
+}
+
+// ── localStorage fallbacks for groups ──
+function lsGrpDB() { try { return JSON.parse(localStorage.getItem('ordeck-groups')||'{}'); } catch(e) { return {}; } }
+function lsGrpSave(db) { try { localStorage.setItem('ordeck-groups', JSON.stringify(db)); } catch(e) {} }
+function lsCreateGroup(name, desc, avatar, vis) {
+  const db = lsGrpDB(); const s = sessionLoad(); if (!s) throw new Error('Not logged in');
+  const id = 'g_' + Date.now(); const code = Math.random().toString(36).slice(2,10).toUpperCase();
+  db[id] = { id, name, description: desc||'', avatar: avatar||'🎵', owner: s.email, visibility: vis||'private', invite_code: code, members: { [s.email]: { role: 'owner', joined: Date.now(), name: s.name||s.email } }, messages: [], projects: {}, created_at: Date.now() };
+  lsGrpSave(db); return db[id];
+}
+function lsGetMyGroups() { const db=lsGrpDB(); const s=sessionLoad(); if(!s)return[]; return Object.values(db).filter(g=>g.members&&g.members[s.email]).map(g=>({...g,myRole:g.members[s.email]?.role||'member',memberCount:Object.keys(g.members).length})); }
+function lsGetGroup(id) { const db=lsGrpDB(); const g=db[id]; if(!g)return null; const userDB=dbLoad(); return {...g,members:Object.entries(g.members||{}).map(([e,m])=>({email:e,name:m.name||userDB[e]?.name||e,role:m.role,joined:m.joined,plan:userDB[e]?.plan||'standard'}))}; }
+function lsJoinGroupByCode(code) { const db=lsGrpDB(); const s=sessionLoad(); if(!s)throw new Error('Not logged in'); const g=Object.values(db).find(g=>g.invite_code&&g.invite_code.toUpperCase()===code.toUpperCase()); if(!g)throw new Error('Invalid invite code'); if(g.members[s.email])throw new Error('Already a member'); g.members[s.email]={role:'member',joined:Date.now(),name:s.name||s.email}; lsGrpSave(db); return g; }
+function lsUpdateGroup(id, upd) { const db=lsGrpDB(); if(db[id])Object.assign(db[id],upd); lsGrpSave(db); }
+function lsDeleteGroup(id) { const db=lsGrpDB(); delete db[id]; lsGrpSave(db); }
+function lsInviteMember(gid, email) { const db=lsGrpDB(); const userDB=dbLoad(); if(!db[gid])throw new Error('Group not found'); if(!userDB[email])throw new Error('User not found'); if(db[gid].members[email])throw new Error('Already a member'); db[gid].members[email]={role:'member',joined:Date.now(),name:userDB[email].name||email}; lsGrpSave(db); }
+function lsSetMemberRole(gid, uid, role) { const db=lsGrpDB(); if(db[gid]?.members[uid])db[gid].members[uid].role=role; lsGrpSave(db); }
+function lsRemoveMember(gid, uid) { const db=lsGrpDB(); if(db[gid]?.members)delete db[gid].members[uid]; lsGrpSave(db); }
+function lsLeaveGroup(gid) { const db=lsGrpDB(); const s=sessionLoad(); if(s&&db[gid]?.members)delete db[gid].members[s.email]; lsGrpSave(db); }
+function lsGetGroupMessages(gid) { const db=lsGrpDB(); return db[gid]?.messages||[]; }
+function lsSendGroupMessage(gid, text) { const db=lsGrpDB(); const s=sessionLoad(); if(!s||!db[gid])throw new Error('Not found'); const msg={id:'gm'+Date.now(),from:s.email,fromName:s.name||s.email,text,ts:Date.now()}; if(!db[gid].messages)db[gid].messages=[]; db[gid].messages.push(msg); lsGrpSave(db); return msg; }
+function lsSaveGroupProject(gid, proj) { const db=lsGrpDB(); if(!db[gid])throw new Error('Group not found'); if(!db[gid].projects)db[gid].projects={}; db[gid].projects[proj.id]={...proj,updatedAt:Date.now()}; lsGrpSave(db); }
+function lsGetGroupProjects(gid) { const db=lsGrpDB(); return Object.values(db[gid]?.projects||{}).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)); }
+function lsDeleteGroupProject(pid) { const db=lsGrpDB(); Object.values(db).forEach(g=>{if(g.projects)delete g.projects[pid]}); lsGrpSave(db); }

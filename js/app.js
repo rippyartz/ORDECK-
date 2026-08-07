@@ -4937,3 +4937,446 @@ document.addEventListener('DOMContentLoaded', function() {
     obs2.observe(homeScreen, { attributes:true, attributeFilter:['class'] });
   }
 });
+
+// ══════════════════════════════════════════════
+// GROUPS / TEAMS SYSTEM
+// ══════════════════════════════════════════════
+var activeGroupId = null;
+var activeGroupData = null;
+var grpChatChannel = null;
+var grpChatPollIv = null;
+
+// ── Open / Close modals ──
+function grpOpenCreate() {
+  document.getElementById('grp-create-modal').style.display = 'flex';
+  var inp = document.getElementById('grpc-name'); if (inp) { inp.value = ''; inp.focus(); }
+  var d = document.getElementById('grpc-desc'); if (d) d.value = '';
+  var a = document.getElementById('grpc-avatar'); if (a) a.value = '🎵';
+}
+function grpCloseCreate() { document.getElementById('grp-create-modal').style.display = 'none'; }
+function grpOpenJoin() {
+  document.getElementById('grp-join-modal').style.display = 'flex';
+  var inp = document.getElementById('grpj-code'); if (inp) { inp.value = ''; inp.focus(); }
+  var e = document.getElementById('grpj-err'); if (e) e.textContent = '';
+}
+function grpCloseJoin() { document.getElementById('grp-join-modal').style.display = 'none'; }
+
+// Close modals on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'grp-create-modal') grpCloseCreate();
+  if (e.target.id === 'grp-join-modal') grpCloseJoin();
+});
+
+// ── Create group ──
+async function grpCreate() {
+  var name = (document.getElementById('grpc-name') || {}).value.trim();
+  var desc = (document.getElementById('grpc-desc') || {}).value.trim();
+  var avatar = (document.getElementById('grpc-avatar') || {}).value.trim() || '🎵';
+  var vis = (document.getElementById('grpc-vis') || {}).value || 'private';
+  if (!name) { showToast('Enter a group name'); return; }
+  try {
+    var grp = await sbCreateGroup(name, desc, avatar, vis);
+    grpCloseCreate();
+    showToast('Group "' + name + '" created!');
+    await grpRefreshList();
+    grpOpenGroup(grp.id);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── Join group ──
+async function grpJoin() {
+  var code = (document.getElementById('grpj-code') || {}).value.trim().toUpperCase();
+  var err = document.getElementById('grpj-err');
+  if (!code || code.length < 4) { if (err) err.textContent = 'Enter a valid invite code'; return; }
+  if (err) err.textContent = '';
+  try {
+    var grp = await sbJoinGroupByCode(code);
+    grpCloseJoin();
+    showToast('Joined "' + grp.name + '"!');
+    await grpRefreshList();
+    grpOpenGroup(grp.id);
+  } catch(e) {
+    if (err) err.textContent = e.message;
+    else showToast('Error: ' + e.message);
+  }
+}
+
+// ── Load groups screen ──
+async function grpRefreshList() {
+  var list = document.getElementById('grp-list');
+  var pubList = document.getElementById('grp-public-list');
+  if (!list) return;
+  list.innerHTML = '<div style="padding:.5rem .7rem;font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.25)">Loading…</div>';
+
+  try {
+    var groups = await sbGetMyGroups();
+    if (!groups.length) {
+      list.innerHTML = '<div style="padding:.6rem .7rem;font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.2)">No groups yet</div>';
+    } else {
+      list.innerHTML = groups.map(function(g) {
+        return '<div class="grp-list-item' + (activeGroupId === g.id ? ' sel' : '') + '" onclick="grpOpenGroup(\'' + g.id + '\')" data-gid="' + g.id + '">' +
+          '<div class="grp-list-avatar">' + (g.avatar || '🎵') + '</div>' +
+          '<div class="grp-list-info">' +
+            '<div class="grp-list-name">' + escHtml(g.name) + '</div>' +
+            '<div class="grp-list-sub">' + (g.memberCount || 1) + ' member' + (g.memberCount !== 1 ? 's' : '') + ' · ' + (g.myRole || 'member') + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+  } catch(e) {
+    list.innerHTML = '<div style="padding:.6rem .7rem;font-family:var(--mono);font-size:9px;color:#f87171">' + e.message + '</div>';
+  }
+
+  // Public groups
+  if (pubList) {
+    try {
+      var allDb = typeof lsGrpDB === 'function' ? lsGrpDB() : {};
+      var pub = Object.values(allDb).filter(function(g) { return g.visibility === 'public'; });
+      if (!pub.length) {
+        pubList.innerHTML = '<div style="padding:.6rem .7rem;font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.2)">None yet</div>';
+      } else {
+        pubList.innerHTML = pub.map(function(g) {
+          return '<div class="grp-list-item" onclick="grpOpenGroup(\'' + g.id + '\')" data-gid="' + g.id + '">' +
+            '<div class="grp-list-avatar">' + (g.avatar || '🌐') + '</div>' +
+            '<div class="grp-list-info">' +
+              '<div class="grp-list-name">' + escHtml(g.name) + '</div>' +
+              '<div class="grp-list-sub">' + Object.keys(g.members || {}).length + ' members</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    } catch(e) { pubList.innerHTML = ''; }
+  }
+}
+
+// ── Open a specific group ──
+async function grpOpenGroup(id) {
+  activeGroupId = id;
+  // Update sidebar selection
+  document.querySelectorAll('.grp-list-item').forEach(function(el) {
+    el.classList.toggle('sel', el.dataset.gid === id);
+  });
+  // Show view, hide empty state
+  var empty = document.getElementById('grp-empty');
+  var view = document.getElementById('grp-view');
+  if (empty) empty.style.display = 'none';
+  if (view) { view.style.display = 'flex'; }
+
+  // Load group data
+  try {
+    var g = await sbGetGroup(id);
+    if (!g) { showToast('Group not found'); return; }
+    activeGroupData = g;
+
+    // Header
+    var avatarEl = document.getElementById('grp-view-avatar'); if (avatarEl) avatarEl.textContent = g.avatar || '🎵';
+    var nameEl = document.getElementById('grp-view-name'); if (nameEl) nameEl.textContent = g.name;
+    var descEl = document.getElementById('grp-view-desc'); if (descEl) descEl.textContent = g.description || 'No description';
+    var metaEl = document.getElementById('grp-view-meta');
+    if (metaEl) metaEl.innerHTML =
+      '<span>' + (g.members ? g.members.length : 1) + ' members</span>' +
+      '<span>' + (g.visibility === 'public' ? '🌐 Public' : '🔒 Private') + '</span>' +
+      '<span>Created ' + timeAgo(g.created_at) + '</span>';
+
+    // Actions
+    var session = typeof sessionLoad === 'function' ? sessionLoad() : null;
+    var myEmail = session ? session.email : '';
+    var myMember = g.members ? g.members.find(function(m) { return m.email === myEmail; }) : null;
+    var myRole = myMember ? myMember.role : 'member';
+    var isOwner = g.owner === myEmail || myRole === 'owner';
+    var isAdmin = myRole === 'admin' || isOwner;
+    var actionsEl = document.getElementById('grp-view-actions');
+    if (actionsEl) actionsEl.innerHTML =
+      (isAdmin ? '<button class="grp-sm-btn" onclick="grpCopyInvite()"><i class="ti ti-copy" aria-hidden="true"></i> Copy invite</button>' : '') +
+      '<button class="grp-sm-btn" onclick="grpTab(document.querySelector(\'.grp-tab\'),\'grp-tab-chat\')"><i class="ti ti-message-2" aria-hidden="true"></i> Chat</button>';
+
+    // Delete button visibility
+    var delBtn = document.getElementById('grp-delete-btn');
+    if (delBtn) delBtn.style.display = isOwner ? 'flex' : 'none';
+
+    // Pre-fill settings
+    var sName = document.getElementById('grps-name'); if (sName) sName.value = g.name;
+    var sDesc = document.getElementById('grps-desc'); if (sDesc) sDesc.value = g.description || '';
+    var sAvatar = document.getElementById('grps-avatar'); if (sAvatar) sAvatar.value = g.avatar || '🎵';
+    var sVis = document.getElementById('grps-vis'); if (sVis) sVis.value = g.visibility || 'private';
+
+    // Invite code row
+    var codeRow = document.getElementById('grp-invite-code-row');
+    if (codeRow) codeRow.innerHTML = isAdmin ?
+      '<span style="font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.4)">Invite code:</span>' +
+      '<span class="grp-invite-code">' + (g.invite_code || '--------') + '</span>' +
+      '<button class="grp-sm-btn" onclick="grpCopyInvite()"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>' :
+      '<span style="font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.3)">Ask an admin for the invite code</span>';
+
+    // Switch to chat tab by default
+    grpTab(document.querySelector('.grp-tab'), 'grp-tab-chat');
+    grpLoadChat();
+    grpLoadMembers();
+    grpLoadProjects();
+
+    // Subscribe to realtime chat
+    if (typeof sbSubscribeGroupChat === 'function') {
+      sbUnsubscribeGroupChat();
+      sbSubscribeGroupChat(id, function(newMsg) { grpAppendMessage(newMsg); });
+    }
+    // Polling fallback for localStorage mode
+    if (grpChatPollIv) clearInterval(grpChatPollIv);
+    grpChatPollIv = setInterval(grpLoadChat, 5000);
+
+  } catch(e) { showToast('Failed to load group: ' + e.message); }
+}
+
+// ── Tab switching ──
+function grpTab(el, panelId) {
+  document.querySelectorAll('.grp-tab').forEach(function(t) { t.classList.remove('sel'); });
+  if (el) el.classList.add('sel');
+  document.querySelectorAll('.grp-tab-body').forEach(function(b) { b.classList.remove('sel'); });
+  var p = document.getElementById(panelId); if (p) p.classList.add('sel');
+  if (panelId === 'grp-tab-members') grpLoadMembers();
+  if (panelId === 'grp-tab-projects') grpLoadProjects();
+}
+
+// ── Chat ──
+async function grpLoadChat() {
+  if (!activeGroupId) return;
+  try {
+    var msgs = await sbGetGroupMessages(activeGroupId);
+    var container = document.getElementById('grp-chat-msgs'); if (!container) return;
+    var wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+    var session = typeof sessionLoad === 'function' ? sessionLoad() : null;
+    var myEmail = session ? session.email : '';
+    container.innerHTML = msgs.length ? msgs.map(function(m) {
+      var mine = m.from === myEmail;
+      return '<div class="grp-msg ' + (mine ? 'mine' : 'theirs') + '">' +
+        '<div class="grp-msg-meta">' + (mine ? '' : '<b>' + escHtml(m.fromName || m.from || 'Unknown') + '</b> · ') + timeAgo(m.ts) + '</div>' +
+        '<div class="grp-bubble">' + escHtml(m.text) + '</div>' +
+      '</div>';
+    }).join('') : '<div class="grp-chat-system">No messages yet. Say hello!</div>';
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  } catch(e) {}
+}
+async function grpSendMessage() {
+  var inp = document.getElementById('grp-chat-inp'); if (!inp || !inp.value.trim() || !activeGroupId) return;
+  var text = inp.value.trim(); inp.value = '';
+  try {
+    var msg = await sbSendGroupMessage(activeGroupId, text);
+    grpAppendMessage(msg);
+  } catch(e) { showToast('Failed to send: ' + e.message); inp.value = text; }
+}
+function grpAppendMessage(m) {
+  var container = document.getElementById('grp-chat-msgs'); if (!container) return;
+  var session = typeof sessionLoad === 'function' ? sessionLoad() : null;
+  var myEmail = session ? session.email : '';
+  var mine = m.from === myEmail || m.sender === myEmail;
+  // Avoid duplicates
+  if (document.querySelector('[data-msgid="' + m.id + '"]')) return;
+  var div = document.createElement('div');
+  div.className = 'grp-msg ' + (mine ? 'mine' : 'theirs');
+  div.dataset.msgid = m.id;
+  div.innerHTML = '<div class="grp-msg-meta">' + (mine ? '' : '<b>' + escHtml(m.fromName || m.from || '') + '</b> · ') + 'just now</div>' +
+    '<div class="grp-bubble">' + escHtml(m.text) + '</div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Members ──
+async function grpLoadMembers() {
+  if (!activeGroupData) return;
+  var g = activeGroupData;
+  var list = document.getElementById('grp-members-list'); if (!list) return;
+  var session = typeof sessionLoad === 'function' ? sessionLoad() : null;
+  var myEmail = session ? session.email : '';
+  var myMember = g.members ? g.members.find(function(m) { return m.email === myEmail; }) : null;
+  var myRole = myMember ? myMember.role : 'member';
+  var isAdmin = myRole === 'admin' || myRole === 'owner';
+
+  list.innerHTML = (g.members || []).map(function(m) {
+    var initials = (m.name || m.email || '?').slice(0, 2).toUpperCase();
+    var isMe = m.email === myEmail;
+    var actions = '';
+    if (isAdmin && !isMe) {
+      if (myRole === 'owner' && m.role !== 'owner') {
+        actions += '<button class="grp-proj-btn" onclick="grpSetRole(\'' + m.email + '\',\'' + (m.role === 'admin' ? 'member' : 'admin') + '\')">' + (m.role === 'admin' ? 'Demote' : 'Make admin') + '</button>';
+        actions += '<button class="grp-proj-btn" style="border-color:rgba(248,113,113,.2);color:rgba(248,113,113,.45)" onclick="grpKick(\'' + m.email + '\')">Remove</button>';
+      }
+    }
+    return '<div class="grp-member-row">' +
+      '<div class="grp-member-av">' + initials + '</div>' +
+      '<div class="grp-member-info">' +
+        '<div class="grp-member-name">' + escHtml(m.name || m.email || 'Unknown') + (isMe ? ' <span style="color:rgba(251,191,36,.3)">(you)</span>' : '') + '</div>' +
+        '<div class="grp-member-email">' + escHtml(m.email || '') + '</div>' +
+      '</div>' +
+      '<span class="grp-role-badge ' + (m.role || 'member') + '">' + (m.role || 'member') + '</span>' +
+      (actions ? '<div class="grp-member-actions">' + actions + '</div>' : '') +
+    '</div>';
+  }).join('') || '<div style="padding:.7rem .8rem;font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.25)">No members found</div>';
+}
+async function grpInvite() {
+  var email = (document.getElementById('grp-invite-email') || {}).value.trim();
+  if (!email || !activeGroupId) { showToast('Enter an email address'); return; }
+  try {
+    await sbInviteMember(activeGroupId, email);
+    showToast('Invited ' + email);
+    document.getElementById('grp-invite-email').value = '';
+    var g = await sbGetGroup(activeGroupId);
+    activeGroupData = g;
+    grpLoadMembers();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+async function grpSetRole(userEmail, role) {
+  if (!activeGroupId) return;
+  try {
+    await sbSetMemberRole(activeGroupId, userEmail, role);
+    showToast('Role updated');
+    var g = await sbGetGroup(activeGroupId); activeGroupData = g; grpLoadMembers();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+async function grpKick(userEmail) {
+  if (!activeGroupId || !confirm('Remove ' + userEmail + ' from the group?')) return;
+  try {
+    await sbRemoveMember(activeGroupId, userEmail);
+    showToast(userEmail + ' removed');
+    var g = await sbGetGroup(activeGroupId); activeGroupData = g; grpLoadMembers();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+function grpCopyInvite() {
+  if (!activeGroupData || !activeGroupData.invite_code) { showToast('No invite code'); return; }
+  try { navigator.clipboard.writeText(activeGroupData.invite_code); showToast('Invite code copied: ' + activeGroupData.invite_code); }
+  catch(e) { showToast('Code: ' + activeGroupData.invite_code); }
+}
+
+// ── Projects ──
+async function grpLoadProjects() {
+  if (!activeGroupId) return;
+  var grid = document.getElementById('grp-projects-grid'); if (!grid) return;
+  grid.innerHTML = '<div class="grp-proj-empty">Loading…</div>';
+  try {
+    var projs = await sbGetGroupProjects(activeGroupId);
+    if (!projs.length) { grid.innerHTML = '<div class="grp-proj-empty">No shared projects yet.<br>Open a project in a studio and click "Share to group".</div>'; return; }
+    var studioLabel = { tb: '🎵 Tidal Beat', vs: '🎬 Visual Studio', ds: '💻 Dev Studio' };
+    grid.innerHTML = projs.map(function(p) {
+      return '<div class="grp-proj-card">' +
+        '<div class="grp-proj-studio">' + (studioLabel[p.studio] || p.studio || 'Project') + '</div>' +
+        '<div class="grp-proj-name">' + escHtml(p.name || 'Untitled') + '</div>' +
+        '<div class="grp-proj-author">by ' + escHtml(p.authorName || p.author || 'Unknown') + ' · ' + timeAgo(p.updatedAt) + '</div>' +
+        '<div class="grp-proj-actions">' +
+          '<button class="grp-proj-btn" onclick="grpOpenProject(\'' + p.id + '\')"><i class="ti ti-folder-open"></i> Open</button>' +
+          '<button class="grp-proj-btn" onclick="grpDeleteProject(\'' + p.id + '\')"><i class="ti ti-trash"></i> Delete</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { grid.innerHTML = '<div class="grp-proj-empty" style="color:#f87171">Error: ' + e.message + '</div>'; }
+}
+async function grpShareCurrentProject() {
+  if (!activeGroupId) { showToast('Open a group first'); return; }
+  // Detect which studio is active and get current project
+  var proj = null;
+  if (typeof tbProj !== 'undefined' && tbProj) proj = tbProj;
+  else if (typeof vsProj !== 'undefined' && vsProj) proj = vsProj;
+  else if (typeof dsProj !== 'undefined' && dsProj) proj = dsProj;
+  if (!proj) { showToast('Open a project in a studio first'); return; }
+  try {
+    await sbSaveGroupProject(activeGroupId, proj);
+    showToast('"' + (proj.name || 'Project') + '" shared to the group!');
+    grpLoadProjects();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+function grpOpenProject(projId) {
+  if (!activeGroupId) return;
+  try {
+    var db = typeof lsGrpDB === 'function' ? lsGrpDB() : {};
+    var g = db[activeGroupId]; if (!g) { showToast('Group not found'); return; }
+    var proj = g.projects ? g.projects[projId] : null;
+    if (!proj) { showToast('Project not found'); return; }
+    // Route to the correct studio
+    if (proj.studio === 'tb' && typeof tbInitProject === 'function') { go('s-tb'); tbInitProject(proj); }
+    else if (proj.studio === 'vs' && typeof vsInitProject === 'function') { go('s-vs'); vsInitProject(proj); }
+    else if (proj.studio === 'ds' && typeof dsInitProject === 'function') { go('s-ds'); dsInitProject(proj); }
+    else showToast('Open the matching studio first, then import');
+  } catch(e) { showToast('Error opening project'); }
+}
+async function grpDeleteProject(projId) {
+  if (!confirm('Remove this project from the group?')) return;
+  try { await sbDeleteGroupProject(projId); showToast('Project removed'); grpLoadProjects(); }
+  catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── Settings ──
+async function grpSaveSettings() {
+  if (!activeGroupId) return;
+  var name = (document.getElementById('grps-name') || {}).value.trim();
+  var desc = (document.getElementById('grps-desc') || {}).value.trim();
+  var avatar = (document.getElementById('grps-avatar') || {}).value.trim() || '🎵';
+  var vis = (document.getElementById('grps-vis') || {}).value || 'private';
+  if (!name) { showToast('Name cannot be empty'); return; }
+  try {
+    await sbUpdateGroup(activeGroupId, { name: name, description: desc, avatar: avatar, visibility: vis });
+    showToast('Group updated');
+    var g = await sbGetGroup(activeGroupId); activeGroupData = g;
+    var nameEl = document.getElementById('grp-view-name'); if (nameEl) nameEl.textContent = name;
+    var descEl = document.getElementById('grp-view-desc'); if (descEl) descEl.textContent = desc || 'No description';
+    var avatarEl = document.getElementById('grp-view-avatar'); if (avatarEl) avatarEl.textContent = avatar;
+    grpRefreshList();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+async function grpLeave() {
+  if (!activeGroupId || !confirm('Leave this group?')) return;
+  try {
+    await sbLeaveGroup(activeGroupId);
+    activeGroupId = null; activeGroupData = null;
+    showToast('You left the group');
+    if (grpChatPollIv) clearInterval(grpChatPollIv);
+    if (typeof sbUnsubscribeGroupChat === 'function') sbUnsubscribeGroupChat();
+    document.getElementById('grp-empty').style.display = 'flex';
+    document.getElementById('grp-view').style.display = 'none';
+    grpRefreshList();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+async function grpDelete() {
+  if (!activeGroupId || !confirm('Delete this group permanently? All data will be lost.')) return;
+  try {
+    await sbDeleteGroup(activeGroupId);
+    activeGroupId = null; activeGroupData = null;
+    showToast('Group deleted');
+    if (grpChatPollIv) clearInterval(grpChatPollIv);
+    if (typeof sbUnsubscribeGroupChat === 'function') sbUnsubscribeGroupChat();
+    document.getElementById('grp-empty').style.display = 'flex';
+    document.getElementById('grp-view').style.display = 'none';
+    grpRefreshList();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── Helpers ──
+function escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+function timeAgo(ts) {
+  if (!ts) return '';
+  var t = typeof ts === 'string' ? new Date(ts).getTime() : ts;
+  var s = Math.floor((Date.now() - t) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  var m = Math.floor(s / 60); if (m < 60) return m + 'm ago';
+  var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+// ── Route hook — load groups when screen becomes active ──
+var _go_grp_orig = go;
+go = function(id) {
+  _go_grp_orig(id);
+  if (id === 's-groups') {
+    setTimeout(function() {
+      grpRefreshList();
+      if (!activeGroupId) {
+        document.getElementById('grp-empty').style.display = 'flex';
+        var v = document.getElementById('grp-view'); if (v) v.style.display = 'none';
+      }
+    }, 60);
+  }
+};
+
+// ── Add SCREEN_ROUTES entry for groups ──
+if (typeof SCREEN_ROUTES !== 'undefined') SCREEN_ROUTES['s-groups'] = '/groups';

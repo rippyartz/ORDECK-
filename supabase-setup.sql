@@ -141,3 +141,83 @@ $$;
 -- Supabase Dashboard → Settings → API
 -- and paste them into js/supabase.js
 -- ═══════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════
+-- GROUPS / TEAMS
+-- ═══════════════════════════════════════════════════════
+
+-- ── GROUPS ────────────────────────────────────────────
+create table if not exists groups (
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null,
+  description  text not null default '',
+  avatar       text not null default '',     -- emoji or URL
+  owner        uuid not null references profiles(id) on delete cascade,
+  visibility   text not null default 'private',  -- 'public' | 'private'
+  invite_code  text unique not null default substr(md5(random()::text), 1, 8),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+alter table groups enable row level security;
+create policy "Members can read own groups" on groups for select
+  using (exists (select 1 from group_members where group_members.group_id = id and group_members.user_id = auth.uid()));
+create policy "Owner can manage group" on groups for all using (auth.uid() = owner);
+create policy "Anyone can read public groups" on groups for select using (visibility = 'public');
+create policy "Authenticated users can create groups" on groups for insert with check (auth.uid() = owner);
+
+-- ── GROUP MEMBERS ──────────────────────────────────────
+create table if not exists group_members (
+  id           uuid primary key default gen_random_uuid(),
+  group_id     uuid not null references groups(id) on delete cascade,
+  user_id      uuid not null references profiles(id) on delete cascade,
+  role         text not null default 'member',  -- 'owner' | 'admin' | 'member'
+  joined_at    timestamptz not null default now(),
+  unique (group_id, user_id)
+);
+alter table group_members enable row level security;
+create policy "Members can see group membership" on group_members for select
+  using (exists (select 1 from group_members gm2 where gm2.group_id = group_id and gm2.user_id = auth.uid()));
+create policy "Admins can manage members" on group_members for all
+  using (exists (select 1 from group_members gm2 where gm2.group_id = group_id and gm2.user_id = auth.uid() and gm2.role in ('owner','admin')));
+create policy "Users can leave groups" on group_members for delete using (auth.uid() = user_id);
+create policy "Anyone can join with invite" on group_members for insert with check (auth.uid() = user_id);
+
+-- ── GROUP CHAT ─────────────────────────────────────────
+create table if not exists group_messages (
+  id           uuid primary key default gen_random_uuid(),
+  group_id     uuid not null references groups(id) on delete cascade,
+  sender       uuid not null references profiles(id) on delete cascade,
+  text         text not null,
+  created_at   timestamptz not null default now()
+);
+alter table group_messages enable row level security;
+create policy "Members can read group chat" on group_messages for select
+  using (exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid()));
+create policy "Members can post to group chat" on group_messages for insert
+  with check (exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid()) and auth.uid() = sender);
+
+-- ── GROUP PROJECTS ─────────────────────────────────────
+create table if not exists group_projects (
+  id           text primary key,
+  group_id     uuid not null references groups(id) on delete cascade,
+  author       uuid not null references profiles(id) on delete cascade,
+  studio       text not null,
+  name         text not null,
+  data         jsonb not null default '{}',
+  pinned       boolean not null default false,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+alter table group_projects enable row level security;
+create policy "Group members can view projects" on group_projects for select
+  using (exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid()));
+create policy "Group members can create projects" on group_projects for insert
+  with check (exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid()) and auth.uid() = author);
+create policy "Project author or admin can update" on group_projects for update
+  using (auth.uid() = author or exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid() and role in ('owner','admin')));
+create policy "Project author or admin can delete" on group_projects for delete
+  using (auth.uid() = author or exists (select 1 from group_members where group_members.group_id = group_id and group_members.user_id = auth.uid() and role in ('owner','admin')));
+
+-- Realtime
+alter publication supabase_realtime add table group_messages;
+alter publication supabase_realtime add table group_members;
