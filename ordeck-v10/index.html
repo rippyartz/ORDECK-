@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORDECK — Tidal Beat · Visual Studio · Dev Studio</title>
+  <meta name="description" content="ORDECK — all-in-one creative suite: professional DAW, animation editor, and live code studio in your browser.">
+  <meta name="author" content="Shayne M. Mwaniki">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app" id="app">
+<canvas class="neon-bg" id="nc"></canvas>
+
+<!-- SPLASH -->
+<div class="screen active z1" id="s-splash" style="align-items:center;justify-content:center;background:#05050f">
+  <div class="sp-wrap">
+    <div class="sp-ring">
+      <div class="sp-I" id="sp-I">I</div>
+    </div>
+    <div class="sp-word" id="sp-word">OR<b>D</b>ECK</div>
+    <div class="sp-sub" id="sp-sub">Unified Creative System</div>
+    <div class="sp-bar"><div class="sp-fill" id="sp-fill"></div></div>
+    <div class="sp-pct" id="sp-pct">0%</div>
+    <div class="sp-step" id="sp-step">Initialising engine…</div>
+    <div class="sp-dots">
+      <div class="sp-dot a"></div>
+      <div class="sp-dot a"></div>
+      <div class="sp-dot a"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="screen z1" id="s-auth" style="background:#05050f;align-items:center;justify-content:center;padding:2rem 1rem">
+  <div class="auth-box">
+    <div class="auth-I">I</div>
+    <div class="auth-logo">OR<b>D</b>ECK</div>
+    <div class="auth-tagline">Unified Creative System</div>
+    <div class="auth-tabs">
+      <div class="auth-tab sel" id="at-si" onclick="authTab('si')">Sign in</div>
+      <div class="auth-tab" id="at-up" onclick="authTab('up')">Sign up</div>
+    </div>
+    <div id="f-si">
+      <div class="af"><label class="al">Email</label><input class="ai" type="email" placeholder="you@email.com" id="a-em"></div>
+      <div class="af"><label class="al">Password</label><input class="ai" type="password" placeholder="••••••••" id="a-pw"></div>
+      <button class="a-submit" onclick="doAuth()">Sign in ↗</button>
+      <div class="a-note">No account? <span onclick="authTab('up')">Create one free →</span></div>
+    </div>
+    <div id="f-up" style="display:none">
+      <div class="af"><label class="al">Full name</label><input class="ai" type="text" placeholder="Your name" id="a-name-inp"></div>
+      <div class="af"><label class="al">Email</label><input class="ai" type="email" placeholder="you@email.com" id="a-email-up"></div>
+      <div class="af"><label class="al">Password</label><input class="ai" type="password" placeholder="••••••••" id="a-pass-up"></div>
+      <button class="a-submit" onclick="doAuth()">Create account ↗</button>
+      <div class="a-note">Have an account? <span onclick="authTab('si')">Sign in →</span></div>
+    </div>
+    <div class="a-div"><span>or</span></div>
+    <div class="a-social">
+      <button class="a-soc" onclick="doAuth()"><i class="ti ti-brand-google" aria-hidden="true"></i>Google</button>
+      <button class="a-soc" onclick="doAuth()"><i class="ti ti-brand-apple" aria-hidden="true"></i>Apple</button>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORIAL -->
+<div class="screen z1" id="s-tutorial" style="background:#05050f;align-items:center;justify-content:center;padding:2rem 1rem">
+  <div class="tut-box">
+    <div class="tut-bar" id="tut-bar"></div>
+    <div id="tut-slides"></div>
+    <div class="tut-nav">
+      <button class="tut-skip" onclick="go('s-home')">Skip</button>
+      <span class="tut-ctr" id="tut-ctr">1 / 5</span>
+      <button class="tut-next" id="tut-btn" onclick="tutNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen z1" id="s-home" style="background:var(--bg)">
+  <div class="app-nav">
+    <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+    <div class="nav-right">
+      <button class="nbtn" onclick="go('s-explore')" style="border-color:rgba(34,211,238,.22);color:rgba(34,211,238,.55)"><i class="ti ti-compass" aria-hidden="true"></i> Explore</button>
+      <button class="nbtn" id="home-upgrade-btn" style="border-color:rgba(139,92,246,.28);color:rgba(139,92,246,.65)" onclick="go('s-payment')">Upgrade ↗</button>
+      <button class="groups-nav-btn" onclick="groupsOpen()" title="Groups" id="groups-nav-btn"><i class="ti ti-users-group" aria-hidden="true"></i><span class="groups-notif-dot" id="groups-notif-dot"></span></button>
+      <button class="friends-nav-btn" onclick="friendsOpen()" title="Friends" id="friends-nav-btn"><i class="ti ti-users" aria-hidden="true"></i><span class="friends-notif-dot" id="friends-notif-dot"></span></button>
+      <div class="nav-av" onclick="go('s-settings')" id="home-nav-av">ZK</div>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="admin-icon-wrap" id="admin-icon-wrap"><button class="admin-icon-btn" onclick="go('s-admin')" title="Admin Panel"><i class="ti ti-shield-lock" aria-hidden="true"></i></button></div>
+      <div class="hbadge">Beta — Unified Creative System</div>
+    <h1 class="htitle">Create without<br><span class="acc">limits.</span></h1>
+    <p class="hdesc">Music, animation, and game development — one workspace for every innovator.</p>
+    <div class="hctas">
+      <button class="hcta-p" id="home-hero-cta" onclick="go('s-payment')">Unlock Prototype+ ↗</button>
+      <button class="hcta-g" onclick="go('s-settings')">My Profile</button>
+    </div>
+  </div>
+  <div class="ticker"><div class="ticker-inner"><span class="ti">Beat sequencer</span><span class="ti">Timeline editor</span><span class="ti">Game engine</span><span class="ti">2D animation</span><span class="ti">Code sandbox</span><span class="ti">Sample library</span><span class="ti">Physics engine</span><span class="ti">Visual scripting</span><span class="ti">Beat sequencer</span><span class="ti">Timeline editor</span><span class="ti">Game engine</span><span class="ti">2D animation</span><span class="ti">Code sandbox</span><span class="ti">Sample library</span><span class="ti">Physics engine</span><span class="ti">Visual scripting</span></div></div>
+  <div class="studios-label">Studios</div>
+  <div class="cards">
+    <div class="card tb" onclick="openSetup('tb')">
+      <div class="card-num">01</div>
+      <i class="card-ic ti ti-music" style="color:#c084fc" aria-hidden="true"></i>
+      <div class="card-name">Tidal Beat</div>
+      <div class="card-desc">Beat sequencing, sampling, mixing and recording for all genres.</div>
+      <div class="card-preview"><div class="cp-tb">
+        <div class="cp-tb-row"><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div></div>
+        <div class="cp-tb-row"><div class="cp-tb-c"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div></div>
+        <div class="cp-tb-row"><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div><div class="cp-tb-c on"></div><div class="cp-tb-c"></div></div>
+      </div><div class="cp-scan"></div></div>
+      <div class="card-tags">
+        <span class="ctag" style="background:rgba(192,132,252,.1);color:#c084fc">Sequencer</span>
+        <span class="ctag" style="background:rgba(192,132,252,.1);color:#c084fc">Mixer</span>
+        <span class="ctag" style="background:rgba(192,132,252,.1);color:#c084fc">Record</span>
+      </div>
+      <button class="card-btn" style="border-color:rgba(192,132,252,.28);color:#c084fc" onclick="event.stopPropagation();openSetup('tb')">Open Tidal Beat ↗</button>
+    </div>
+    <div class="card vs" onclick="openSetup('vs')">
+      <div class="card-num">02</div>
+      <i class="card-ic ti ti-video" style="color:#22d3ee" aria-hidden="true"></i>
+      <div class="card-name">Visual Studio</div>
+      <div class="card-desc">2D animation, keyframes and video editing at full speed.</div>
+      <div class="card-preview"><div class="cp-vs">
+        <div class="cp-vs-clip" style="width:62%;background:#22d3ee33;border:.5px solid #22d3ee66"></div>
+        <div class="cp-vs-clip" style="width:40%;background:#c084fc33;border:.5px solid #c084fc66;margin-left:24%"></div>
+        <div class="cp-vs-clip" style="width:28%;background:#34d39933;border:.5px solid #34d39966;margin-left:58%"></div>
+      </div><div class="cp-scan"></div></div>
+      <div class="card-tags">
+        <span class="ctag" style="background:rgba(34,211,238,.08);color:#22d3ee">Timeline</span>
+        <span class="ctag" style="background:rgba(34,211,238,.08);color:#22d3ee">Keyframes</span>
+        <span class="ctag" style="background:rgba(34,211,238,.08);color:#22d3ee">Render</span>
+      </div>
+      <button class="card-btn" style="border-color:rgba(34,211,238,.28);color:#22d3ee" onclick="event.stopPropagation();openSetup('vs')">Open Visual Studio ↗</button>
+    </div>
+    <div class="card ds" onclick="openSetup('ds')">
+      <div class="card-num">03</div>
+      <i class="card-ic ti ti-device-gamepad-2" style="color:#34d399" aria-hidden="true"></i>
+      <div class="card-name">Dev Studio</div>
+      <div class="card-desc">Live code editor and 2D game engine for platformers and top-down games.</div>
+      <div class="card-preview"><div class="cp-ds">
+        <div class="cp-ds-line" style="width:78%"></div>
+        <div class="cp-ds-line" style="width:52%"></div>
+        <div class="cp-ds-line" style="width:66%"></div>
+        <div class="cp-ds-line" style="width:38%"></div>
+        <div class="cp-ds-spr"></div>
+      </div></div>
+      <div class="card-tags">
+        <span class="ctag" style="background:rgba(52,211,153,.08);color:#34d399">2D Engine</span>
+        <span class="ctag" style="background:rgba(52,211,153,.08);color:#34d399">Platformer</span>
+        <span class="ctag" style="background:rgba(52,211,153,.08);color:#34d399">Physics</span>
+      </div>
+      <button class="card-btn" style="border-color:rgba(52,211,153,.28);color:#34d399" onclick="event.stopPropagation();openSetup('ds')">Open Dev Studio ↗</button>
+    </div>
+  </div>
+
+  <!-- EXPLORE / COMMUNITY -->
+  <div class="explore-section" id="home-explore-section">
+    <div class="explore-hd">
+      <span class="explore-title">Community Projects</span>
+      <div class="explore-filters">
+        <button class="explore-filter sel" onclick="exploreFilter(this,'all')">All</button>
+        <button class="explore-filter" onclick="exploreFilter(this,'tb')"><i class="ti ti-music" aria-hidden="true"></i> Beats</button>
+        <button class="explore-filter" onclick="exploreFilter(this,'vs')"><i class="ti ti-video" aria-hidden="true"></i> Videos</button>
+        <button class="explore-filter" onclick="exploreFilter(this,'ds')"><i class="ti ti-code" aria-hidden="true"></i> Games</button>
+      </div>
+    </div>
+    <div class="explore-grid" id="home-explore-grid">
+      <div class="explore-empty">Loading community projects...</div>
+    </div>
+    <button class="explore-load-more" onclick="go('s-explore')">Browse all projects in Explore →</button>
+  </div>
+  <div class="hstats">
+    <div class="hstat"><div class="hstat-n">3<b>+</b></div><div class="hstat-l">Studios</div></div>
+    <div class="hstat"><div class="hstat-n">1<b>×</b></div><div class="hstat-l">Workspace</div></div>
+    <div class="hstat"><div class="hstat-n" style="font-size:18px">∞</div><div class="hstat-l">Possible</div></div>
+    <div class="hstat"><div class="hstat-n"><b>β</b></div><div class="hstat-l">Beta</div></div>
+  </div>
+  <div class="home-foot"><span class="hf-l">ORDECK I v0.1.0</span><span class="hf-r">Developed by Shayne M. Mwaniki</span></div>
+</div>
+
+<!-- SETUP WIZARD -->
+<div class="screen z1" id="s-setup" style="background:#05050f;align-items:center;justify-content:center;padding:2rem 1rem">
+  <div class="wiz">
+    <div class="wiz-hd"><div class="wiz-title" id="wiz-t">Studio Setup</div><div class="wiz-sub" id="wiz-s">Tell us about your project</div></div>
+    <div class="wiz-prog"><div class="wiz-prog-fill" id="wiz-pf" style="width:20%"></div></div>
+    <div class="wiz-body" id="wiz-b"></div>
+    <div class="wiz-nav">
+      <button class="wiz-back" onclick="wizBack()">← Back</button>
+      <span class="wiz-step" id="wiz-st">Step 1 of 5</span>
+      <button class="wiz-next" onclick="wizNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDIO PICKER -->
+<div class="screen z1" id="s-picker" style="align-items:center;justify-content:center;padding:2rem 1rem">
+  <div class="pick-box">
+    <div class="pick-hd"><div class="pick-title" id="pick-t">Studio</div><div class="pick-sub">Start a new project or continue one you've already made</div></div>
+    <div class="pick-grid" id="pick-grid">
+      <div class="pick-tile" onclick="pickNew()"><i class="ti ti-plus" aria-hidden="true"></i><div class="pick-tile-t">New Studio</div><div class="pick-tile-s">Start a fresh project</div></div>
+      <div class="pick-tile" onclick="pickContinue()"><i class="ti ti-folder" aria-hidden="true"></i><div class="pick-tile-t">Continue Studio</div><div class="pick-tile-s" id="pick-cont-s">0 saved projects</div></div>
+    </div>
+    <div class="pick-list" id="pick-list" style="display:none"></div>
+    <div style="text-align:center;margin-top:1.1rem"><button class="back-btn" onclick="go('s-home')">← Home</button></div>
+  </div>
+</div>
+
+<!-- TIDAL BEAT -->
+<div class="screen z1" id="s-tb" style="background:#1c1c1c">
+  <div class="stu-nav" style="border-color:rgba(192,132,252,.14);background:#1c1c1c">
+    <div class="stu-nl">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff;cursor:pointer" onclick="go('s-home')">I OR<span style="color:#c084fc">D</span>ECK</span>
+      <div style="width:.5px;height:12px;background:rgba(255,255,255,.1)"></div>
+      <span class="stu-badge" style="color:#c084fc" id="tb-projname">Tidal Beat</span>
+    </div>
+    <div class="sbtns">
+      <button class="sbtn" style="border-color:rgba(192,132,252,.18);color:rgba(192,132,252,.5)" onclick="document.getElementById('tb-audioInput').click()">Import</button>
+      <button class="sbtn" style="border-color:rgba(192,132,252,.18);color:rgba(192,132,252,.5)" onclick="touchProj('tb');showToast('Project saved')">Save</button>
+      <button class="sbtn" style="border-color:rgba(192,132,252,.28);color:#c084fc" onclick="openUploadModal('tb')"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Publish</button>
+      <button class="sbtn" id="tb-exportbtn" style="background:rgba(192,132,252,.12);border-color:#c084fc;color:#e9d5ff" onclick="tbExport()">Export</button>
+      <button class="sbtn" style="border-color:rgba(192,132,252,.28);color:#c084fc" onclick="openInstruments()"><i class="ti ti-piano" aria-hidden="true"></i> Instruments</button>
+      <button class="sbtn" style="border-color:rgba(192,132,252,.3);color:#c084fc" onclick="tbAiOpen(this)">AI+</button>
+      <button class="enlarge-btn" onclick="enlargeTB()" title="Enlarge"><i class="ti ti-maximize" aria-hidden="true"></i> Enlarge</button>
+      <button class="back-btn" onclick="go('s-home')">← Home</button>
+    </div>
+  </div>
+  <div class="tb-icontoolbar">
+    <div class="tb-icbtn" title="New" onclick="showPicker('tb')"><i class="ti ti-file-plus" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Open" onclick="showPicker('tb')"><i class="ti ti-folder-open" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Save" onclick="touchProj('tb');showToast('Project saved')"><i class="ti ti-device-floppy" aria-hidden="true"></i></div>
+    <div class="tb-icsep"></div>
+    <div class="tb-icbtn" title="Cut" onclick="showToast('Select cells on the grid to edit')"><i class="ti ti-scissors" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Copy" onclick="showToast('Select cells on the grid to edit')"><i class="ti ti-copy" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Paste" onclick="showToast('Select cells on the grid to edit')"><i class="ti ti-clipboard" aria-hidden="true"></i></div>
+    <div class="tb-icsep"></div>
+    <div class="tb-icbtn" title="Undo" onclick="showToast('Nothing to undo')"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Redo" onclick="showToast('Nothing to redo')"><i class="ti ti-arrow-forward-up" aria-hidden="true"></i></div>
+    <div class="tb-icsep"></div>
+    <div class="tb-icbtn" title="Zoom in" onclick="showToast('Zoom coming soon')"><i class="ti ti-zoom-in" aria-hidden="true"></i></div>
+    <div class="tb-icbtn" title="Zoom out" onclick="showToast('Zoom coming soon')"><i class="ti ti-zoom-out" aria-hidden="true"></i></div>
+    <div class="tb-showme" onclick="showToast('Tip: click a grid cell to program a beat')"><i class="ti ti-help-circle" aria-hidden="true"></i> Show Me How</div>
+  </div>
+  <div class="tb-shell">
+    <div class="tb-actionrail">
+      <div class="tb-ar-grp">Workspace Actions</div>
+      <div class="tb-ar-grid">
+        <div class="tb-ar-tile" onclick="document.getElementById('tb-mix').scrollIntoView({behavior:'smooth'})"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i><span>Mixer</span></div>
+        <div class="tb-ar-tile" onclick="document.querySelector('.tb-meters').scrollIntoView({behavior:'smooth'})"><i class="ti ti-gauge" aria-hidden="true"></i><span>Channel Meters</span></div>
+        <div class="tb-ar-tile" onclick="document.getElementById('tb-wave').scrollIntoView({behavior:'smooth'})"><i class="ti ti-wave-sine" aria-hidden="true"></i><span>Oscilloscope</span></div>
+        <div class="tb-ar-tile" onclick="document.getElementById('tb-arr').scrollIntoView({behavior:'smooth'})"><i class="ti ti-layout-board-split" aria-hidden="true"></i><span>Arrangement</span></div>
+        <div class="tb-ar-tile" onclick="showToast('VST settings coming soon')"><i class="ti ti-settings" aria-hidden="true"></i><span>VST Settings</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Audio settings coming soon')"><i class="ti ti-headphones" aria-hidden="true"></i><span>Audio Settings</span></div>
+      </div>
+      <div class="tb-ar-grp">Import Actions</div>
+      <div class="tb-ar-grid">
+        <div class="tb-ar-tile" onclick="showPicker('tb')"><i class="ti ti-file-plus" aria-hidden="true"></i><span>New</span></div>
+        <div class="tb-ar-tile" onclick="showPicker('tb')"><i class="ti ti-folder-open" aria-hidden="true"></i><span>Open…</span></div>
+        <div class="tb-ar-tile" onclick="tbToggleRec()"><i class="ti ti-microphone" aria-hidden="true"></i><span>Record</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Audio import coming soon')"><i class="ti ti-disc" aria-hidden="true"></i><span>Extract from CD</span></div>
+      </div>
+      <div class="tb-ar-grp">Effects</div>
+      <div class="tb-ar-grid">
+        <div class="tb-ar-tile" onclick="showToast('Pick a track\'s FX dropdown to apply')"><i class="ti ti-sparkles" aria-hidden="true"></i><span>Ozone Elements</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Pick a track\'s FX dropdown to apply')"><i class="ti ti-arrow-loop-left" aria-hidden="true"></i><span>Delay</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Pick a track\'s FX dropdown to apply')"><i class="ti ti-droplet" aria-hidden="true"></i><span>Chorus</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Pick a track\'s FX dropdown to apply')"><i class="ti ti-wind" aria-hidden="true"></i><span>Flanger</span></div>
+      </div>
+      <div class="tb-ar-grp">Mastering</div>
+      <div class="tb-ar-grid">
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.95,'Rock Vintage')"><i class="ti ti-guitar-pick" aria-hidden="true"></i><span>Rock Vintage</span></div>
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.85,'Modern Pop')"><i class="ti ti-microphone-2" aria-hidden="true"></i><span>Modern Pop</span></div>
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.9,'Electronic')"><i class="ti ti-bolt" aria-hidden="true"></i><span>Electronic</span></div>
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.8,'YouTube')"><i class="ti ti-brand-youtube" aria-hidden="true"></i><span>YouTube</span></div>
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.75,'Spotify')"><i class="ti ti-brand-spotify" aria-hidden="true"></i><span>Spotify</span></div>
+        <div class="tb-ar-tile" onclick="tbMasterPreset(0.78,'SoundCloud')"><i class="ti ti-cloud" aria-hidden="true"></i><span>SoundCloud</span></div>
+      </div>
+      <div class="tb-ar-grp">Export</div>
+      <div class="tb-ar-grid">
+        <div class="tb-ar-tile" onclick="touchProj('tb');showToast('Project saved')"><i class="ti ti-device-floppy" aria-hidden="true"></i><span>Save</span></div>
+        <div class="tb-ar-tile" onclick="tbExport()"><i class="ti ti-file-export" aria-hidden="true"></i><span>Export .wav</span></div>
+        <div class="tb-ar-tile" onclick="showToast('Burning to CD coming soon')"><i class="ti ti-disc" aria-hidden="true"></i><span>Burn CD…</span></div>
+        <div class="tb-ar-tile" onclick="tbExport()"><i class="ti ti-brand-youtube" aria-hidden="true"></i><span>YouTube</span></div>
+        <div class="tb-ar-tile" onclick="tbExport()"><i class="ti ti-brand-spotify" aria-hidden="true"></i><span>Spotify</span></div>
+        <div class="tb-ar-tile" onclick="tbExport()"><i class="ti ti-cloud" aria-hidden="true"></i><span>SoundCloud</span></div>
+      </div>
+    </div>
+    <div class="tb-main">
+      <div class="tb-t">
+        <button class="tbb icon-only" onclick="tbRewind()" aria-label="Rewind to start" title="Rewind to start"><i class="ti ti-player-skip-back" aria-hidden="true"></i></button>
+        <button class="tb-play" id="tb-pb" onclick="tbTogglePlay()" aria-label="Play"><i class="ti ti-player-play" id="tb-pi" style="color:#fff;font-size:12px" aria-hidden="true"></i></button>
+        <button class="tbb" onclick="tbStop()" title="Stop"><i class="ti ti-player-stop" aria-hidden="true"></i> Stop</button>
+        <button class="tbb on" title="Loop the arrangement"><i class="ti ti-repeat" aria-hidden="true"></i> Loop</button>
+        <button class="tbb" id="tb-rec" onclick="tbToggleRec()" style="border-color:rgba(248,113,113,.28);color:rgba(248,113,113,.45)" title="Record"><i class="ti ti-circle-filled" aria-hidden="true"></i> Rec</button>
+        <span class="tb-rec-mode-lbl" id="tb-rec-label" style="display:none"><i class="ti ti-microphone" aria-hidden="true"></i> Mic only</span>
+        <div class="tb-bpm-grp">
+          <span class="tb-bpm-lbl">BPM</span>
+          <button class="tb-bpm-btn" onclick="tbBPMAdj(-1)">−</button>
+          <span class="tb-bpm-val" id="tb-bv">120</span>
+          <button class="tb-bpm-btn" onclick="tbBPMAdj(1)">+</button>
+        </div>
+        <button class="tbb" style="margin-left:.3rem">4/4</button>
+        <span class="tb-time" id="tb-time">0:00.0</span>
+      </div>
+
+      <div class="tb-meters">
+        <div class="tb-timebig" id="tb-timebig">00:00:00,0</div>
+        <div class="tb-chanmeters" id="tb-chanmeters"></div>
+        <div class="tb-loudness">
+          <div class="tb-ld"><span class="tb-ld-v" id="tb-ld-m">−10.4</span><span class="tb-ld-k">MOMENTARY</span></div>
+          <div class="tb-ld"><span class="tb-ld-v" id="tb-ld-s">−5.4</span><span class="tb-ld-k">SHORT</span></div>
+          <div class="tb-ld"><span class="tb-ld-v" id="tb-ld-i">−9.5</span><span class="tb-ld-k">INTEGRATED</span></div>
+          <div class="tb-ld"><span class="tb-ld-v">17.6</span><span class="tb-ld-k">LRA</span></div>
+        </div>
+      </div>
+      <div class="tb-tools">
+        <button class="tb-addtrack" onclick="tbToggleAddPanel()"><i class="ti ti-plus" aria-hidden="true"></i> Add track</button>
+        <div class="tb-addpanel" id="tb-addpanel"></div>
+        <input type="file" id="tb-audioInput" accept="audio/*" style="display:none" onchange="tbHandleAudioFile(event)">
+        <div class="tb-patrow" id="tb-patrow" style="padding:0;border:none;margin-left:.4rem"></div>
+      </div>
+      <div class="tb-arr" id="tb-arr"></div>
+      <div class="tb-body">
+        <div class="tb-tracks">
+          <div class="tb-track-hd"><span style="font-family:var(--mono);font-size:8px;color:rgba(192,132,252,.2);letter-spacing:.09em">TRACKS</span></div>
+          <div id="tb-tl"></div>
+        </div>
+        <div class="tb-grid">
+          <div class="tb-ghd" id="tb-ghd"></div>
+          <div class="tb-grs" id="tb-grs"></div>
+        </div>
+      </div>
+      <div class="tb-wave" id="tb-wave"></div>
+      <div class="tb-freq-panel" id="tb-freq-panel">
+        <div class="tb-freq-hd">
+          <span>Beat Frequency &amp; Waveform</span>
+          <span class="tb-freq-badge" id="tb-freq-badge">IDLE</span>
+        </div>
+        <div id="tb-freq-rows"></div>
+      </div>
+      <div class="tb-mix" id="tb-mix"></div>
+      <div class="tb-recs" id="tb-recs"></div>
+      <div class="tb-filebrowser">
+        <div class="tb-fb-hd">Explorer</div>
+        <div class="tb-fb-row"><i class="ti ti-device-desktop" style="color:#94a3b8" aria-hidden="true"></i>Desktop</div>
+        <div class="tb-fb-row tb-fb-ind"><i class="ti ti-folder" style="color:#fbbf24" aria-hidden="true"></i>My Computer</div>
+        <div class="tb-fb-row tb-fb-ind"><i class="ti ti-folder" style="color:#fbbf24" aria-hidden="true"></i>Documents</div>
+        <div class="tb-fb-row"><i class="ti ti-affiliate" style="color:#94a3b8" aria-hidden="true"></i>Network</div>
+        <div class="tb-fb-row"><i class="ti ti-star" style="color:#94a3b8" aria-hidden="true"></i>Favorites</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISUAL STUDIO -->
+<div class="screen z1" id="s-vs" style="background:#1d1d1d">
+  <div class="stu-nav" style="border-color:rgba(34,211,238,.13);background:#1b1b1b">
+    <div class="stu-nl">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff;cursor:pointer" onclick="go('s-home')">I OR<span style="color:#22d3ee">D</span>ECK</span>
+      <div style="width:.5px;height:12px;background:rgba(255,255,255,.1)"></div>
+      <span class="stu-badge" style="color:#22d3ee" id="vs-projname">Visual Studio</span>
+    </div>
+    <div class="sbtns">
+      <button class="sbtn" style="border-color:rgba(34,211,238,.18);color:rgba(34,211,238,.5)" onclick="vsOpenFileMgr()">⊞ Files</button>
+      <button class="sbtn" style="border-color:rgba(34,211,238,.18);color:rgba(34,211,238,.5)" onclick="touchProj('vs');showToast('Project saved')">Save</button>
+      <button class="sbtn" style="border-color:rgba(34,211,238,.28);color:#22d3ee" onclick="openUploadModal('vs')"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Publish</button>
+      <button class="sbtn" id="vs-exportbtn" style="background:rgba(34,211,238,.1);border-color:#22d3ee;color:#22d3ee" onclick="vsExport()">Render</button>
+      <button class="sbtn" style="border-color:rgba(34,211,238,.28);color:#22d3ee" onclick="vsAiOpen(this)">AI+</button>
+      <button class="enlarge-btn" onclick="enlargeVS()" title="Enlarge"><i class="ti ti-maximize" aria-hidden="true"></i> Enlarge</button>
+      <button class="back-btn" onclick="go('s-home')">← Home</button>
+    </div>
+  </div>
+  <div class="vs-wstabs">
+    <div class="vs-wstab">File</div><div class="vs-wstab">Edit</div><div class="vs-wstab">Render</div><div class="vs-wstab">Window</div><div class="vs-wstab">Help</div>
+    <div style="flex:1"></div>
+    <div class="vs-wstab">Layout</div><div class="vs-wstab sel">2D Animation</div><div class="vs-wstab">Masking</div><div class="vs-wstab add">+</div>
+  </div>
+  <div class="vs-body">
+    <div class="vs-t">
+      <span class="vs-optchip">Draw <b id="vs-toolname">Pen.001</b></span>
+      <span class="vs-optchip">Radius: 30px</span>
+      <span class="vs-optchip">Strength: 1.000</span>
+      <span class="vs-optchip">Layer: <b id="vs-curlayer">—</b></span>
+      <button class="vs-play-btn" id="vs-pb" onclick="vsTogglePlay()" aria-label="Play/Stop" style="margin-left:auto"><i class="ti ti-player-play" id="vs-pi" style="color:#1d1d1d;font-size:12px" aria-hidden="true"></i></button>
+      <span style="font-family:var(--mono);font-size:10px;color:rgba(34,211,238,.4);border:.5px solid rgba(34,211,238,.18);padding:3px 8px;margin-left:5px" id="vs-fpslbl">24 FPS</span>
+    </div>
+    <div class="vs-main">
+      <div class="vs-toolrail">
+        <div class="vs-tool sel" onclick="vsTool(this)" title="Select"><i class="ti ti-pointer" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this)" title="Move"><i class="ti ti-arrows-move" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this)" title="Pen"><i class="ti ti-pencil" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this);vsAddLayer('shape')" title="Shape"><i class="ti ti-square" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this);vsAddLayer('text')" title="Text"><i class="ti ti-letter-t" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this)" title="Keyframe"><i class="ti ti-diamond" aria-hidden="true"></i></div>
+        <div class="vs-tool" onclick="vsTool(this)" title="Cut"><i class="ti ti-scissors" aria-hidden="true"></i></div>
+      </div>
+      <div class="vs-layers">
+        <div class="vs-outliner">
+          <div class="vs-lt" style="margin-bottom:.25rem">Scene Collection</div>
+          <div class="vs-out-row"><i class="ti ti-video" aria-hidden="true"></i>Camera</div>
+          <div class="vs-out-row"><i class="ti ti-square" aria-hidden="true"></i>bg</div>
+          <div class="vs-out-row sel"><i class="ti ti-pencil" aria-hidden="true"></i><span id="vs-out-name">GPencil</span></div>
+        </div>
+        <div class="vs-lt">Layers</div>
+        <div id="vs-ll"></div>
+        <div class="vs-addwrap">
+          <div class="vs-add" onclick="vsToggleAddPanel()"><i class="ti ti-plus" aria-hidden="true"></i> Add layer</div>
+          <div class="vs-addpanel" id="vs-addpanel">
+            <div class="vs-addopt" onclick="vsAddLayer('text')"><i class="ti ti-letter-t" aria-hidden="true"></i>Text</div>
+            <div class="vs-addopt" onclick="vsAddLayer('shape')"><i class="ti ti-square" aria-hidden="true"></i>Shape</div>
+            <div class="vs-addopt" onclick="document.getElementById('vs-imgInput').click()"><i class="ti ti-photo" aria-hidden="true"></i>Image</div>
+            <div class="vs-addopt" onclick="document.getElementById('vs-vidInput').click()"><i class="ti ti-movie" aria-hidden="true"></i>Video</div>
+          </div>
+        </div>
+        <input type="file" id="vs-imgInput" accept="image/*" style="display:none" onchange="vsHandleFile(event,'image')">
+        <input type="file" id="vs-vidInput" accept="video/*" style="display:none" onchange="vsHandleFile(event,'video')">
+      </div>
+      <div class="vs-canvas">
+        <div class="vs-prev">
+          <div class="vs-viewport vs-scr">
+            <div class="vs-viewport-hd">Camera Perspective<br><span id="vs-projname2">(34) MAINCHARACTER</span></div>
+            <div class="vs-gizmo"><i class="ti ti-axis-y" aria-hidden="true"></i></div>
+            <div class="vs-canvas-wrap">
+              <canvas id="vs-pc" width="640" height="360" style="display:block;width:100%;height:100%;object-fit:contain;background:#000"></canvas>
+              <canvas id="vs-draw" width="640" height="360" style="display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;cursor:crosshair" onmousedown="vsDrawStart(event)" onmousemove="vsDrawMove(event)" onmouseup="vsDrawEnd()" onmouseleave="vsDrawEnd()"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vs-props" id="vs-propswrap"></div>
+    </div>
+    <div class="vs-dopesheet">
+      <div class="vs-ds-menubar"><span>Playback</span><span>Keying</span><span>View</span><span>Select</span><span>Marker</span><span>Channel</span><span>Frame</span></div>
+      <div id="vs-tlwrap" style="position:relative;display:flex;flex-direction:column">
+        <div class="vs-tlhd"><div class="vs-tln">Summary</div><div class="vs-tlm" id="vs-marks"></div></div>
+        <div class="vs-tlrows" id="vs-tlrows"></div>
+        <div class="vs-ph" id="vs-ph" style="left:54px"></div>
+      </div>
+      <div class="vs-ds-transport">
+        <button class="vsb" onclick="vsTime=0;vsUpdatePlayhead();vsDrawPreview()" aria-label="Rewind to start" title="Rewind to start"><i class="ti ti-player-skip-back" aria-hidden="true"></i></button>
+        <button class="vsb" onclick="vsTogglePlay()" aria-label="Play" title="Play / Pause"><i class="ti ti-player-play" id="vs-pi2" aria-hidden="true"></i></button>
+        <label>Start <input type="number" value="0" disabled></label>
+        <label>End <input type="number" id="vs-endinput" value="12" onchange="vsSetDuration(this.value)"></label>
+        <span id="vs-fc">Frame 0 / 288</span>
+        <button class="vs-extend-btn" onclick="vsExtendTimeline()"><i class="ti ti-plus" aria-hidden="true"></i> Extend (+30s)</button><span style="margin-left:auto">Mem: <span id="vs-mem">412.3 MB</span></span>
+        <span style="display:flex;flex-direction:column;gap:1px;font-size:8px;color:rgba(34,211,238,.22)">
+          <span>Duration <b style="color:#22d3ee" id="vs-durlbl">12s</b></span>
+        </span>
+        <span style="font-size:8px;color:rgba(34,211,238,.22)">Canvas <b style="color:#22d3ee" id="vs-canvaslbl">1280×720</b></span>
+        <span style="font-size:8px;color:rgba(34,211,238,.22)">Layers <b style="color:#22d3ee" id="vs-lc">4</b></span>
+      </div>
+    </div>
+
+      <!-- VS EFFECTS PANEL -->
+      <div class="vs-fx-panel" id="vs-fx-panel" style="position:relative">
+        <div class="vs-fx-picker" id="vs-fx-picker"></div>
+        <div class="vs-fx-hd">
+          <span class="vs-fx-title">Effects Chain</span>
+          <span style="font-family:var(--mono);font-size:9px;color:rgba(34,211,238,.3);margin-left:.5rem" id="vs-fx-layer-lbl">— no layer selected —</span>
+          <button class="vs-fx-add-btn" onclick="vsFxPickerOpen()"><i class="ti ti-plus" aria-hidden="true"></i> Add Effect</button>
+        </div>
+        <div class="vs-fx-list-wrap" id="vs-fx-list"></div>
+      </div>
+  </div>
+</div>
+
+<!-- VS FILE MANAGER MODAL -->
+<div class="vs-fm-overlay" id="vs-fm-overlay">
+  <div class="vs-fm-box">
+    <div class="vs-fm-hd">
+      <span class="vs-fm-title">⊞ Visual Studio Files</span>
+      <button class="vs-fm-x" onclick="vsCloseFileMgr()">✕</button>
+    </div>
+    <div class="vs-fm-tabs">
+      <div class="vs-fm-tab sel" id="vs-fm-t-upload" onclick="vsFmTab('upload')">Upload &amp; Edit</div>
+      <div class="vs-fm-tab" id="vs-fm-t-create" onclick="vsFmTab('create')">Create New</div>
+      <div class="vs-fm-tab" id="vs-fm-t-library" onclick="vsFmTab('library')">My Files</div>
+    </div>
+    <div class="vs-fm-body" id="vs-fm-body"></div>
+    <div class="vs-fm-footer">
+      <button class="vs-fm-action sec" onclick="vsCloseFileMgr()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEV STUDIO -->
+<div class="screen z1" id="s-ds" style="background:#1e1e1e">
+  <div class="vsc-titlebar">
+    <div class="vsc-dots"><span></span><span></span><span></span></div>
+    <div class="vsc-addr"><i class="ti ti-lock" aria-hidden="true"></i> vscode.dev / <span id="ds-addr-name">my-game</span></div>
+  </div>
+  <div class="stu-nav" style="border-color:rgba(52,211,153,.13);background:#1e1e1e">
+    <div class="stu-nl">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff;cursor:pointer" onclick="go('s-home')">I OR<span style="color:#34d399">D</span>ECK</span>
+      <div style="width:.5px;height:12px;background:rgba(255,255,255,.1)"></div>
+      <span class="stu-badge" style="color:#34d399" id="ds-projname">Dev Studio</span>
+    </div>
+    <div class="sbtns">
+      <button class="sbtn" style="border-color:rgba(52,211,153,.18);color:rgba(52,211,153,.5)" onclick="touchProj('ds');showToast('Project saved')">Save</button>
+      <button class="sbtn" style="border-color:rgba(52,211,153,.28);color:#34d399" onclick="openUploadModal('ds')"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Publish</button>
+      <select id="ds-lang-sel" onchange="dsSetLang(this.value)" style="font-family:var(--mono);font-size:10px;background:#1a1a1a;color:#34d399;border:.5px solid rgba(52,211,153,.28);padding:4px 8px;outline:none;cursor:pointer;letter-spacing:.05em">
+        <option value="javascript">JavaScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="python">Python</option>
+        <option value="c">C</option>
+        <option value="cpp">C++</option>
+      </select>
+      <button class="dsb run" id="ds-run-btn" onclick="dsRun()"><i class="ti ti-player-play" aria-hidden="true"></i> Run</button>
+      <button class="dsb" id="ds-stop-btn" onclick="dsStopRun()" style="display:none;border-color:rgba(248,113,113,.3);color:#f87171"><i class="ti ti-player-stop" aria-hidden="true"></i> Stop</button>
+      <button class="sbtn" style="border-color:rgba(52,211,153,.28);color:#34d399" onclick="dsDownload()">⬇ Download</button>
+      <button class="sbtn" style="border-color:rgba(52,211,153,.28);color:#34d399" onclick="dsAiOpen(this)">AI Code+</button>
+      <button class="enlarge-btn" onclick="enlargeDS()" title="Enlarge"><i class="ti ti-maximize" aria-hidden="true"></i> Enlarge</button>
+      <button class="back-btn" onclick="go('s-home')">← Home</button>
+    </div>
+  </div>
+  <div class="ds-layout">
+    <div class="vsc-activitybar">
+      <div class="vsc-act sel" title="Explorer"><i class="ti ti-files" aria-hidden="true"></i></div>
+      <div class="vsc-act" title="Search" onclick="showToast('Search coming soon')"><i class="ti ti-search" aria-hidden="true"></i></div>
+      <div class="vsc-act" title="Source Control" onclick="showToast('Source control coming soon')"><i class="ti ti-git-branch" aria-hidden="true"></i></div>
+      <div class="vsc-act" title="Run" onclick="dsRun()"><i class="ti ti-player-play" aria-hidden="true"></i></div>
+      <div class="vsc-act" title="Extensions" onclick="showToast('Extensions coming soon')"><i class="ti ti-puzzle" aria-hidden="true"></i></div>
+      <div class="vsc-act" title="Settings" style="margin-top:auto" onclick="go('s-settings')"><i class="ti ti-settings" aria-hidden="true"></i></div>
+    </div>
+    <div class="ds-side">
+      <div class="ds-fh">Explorer <span class="ds-addfile" onclick="dsAddFile()">+ add</span></div>
+      <div class="ds-fi root"><i class="ti ti-chevron-down" aria-hidden="true"></i><i class="ti ti-folder-open" style="color:#dcb67a" aria-hidden="true"></i><span id="ds-rootname">MY-GAME</span></div>
+      <div id="ds-filelist"></div>
+      <div style="margin-top:auto;padding:.55rem .6rem;border-top:.5px solid rgba(52,211,153,.06)">
+        <div style="font-size:11px;color:rgba(52,211,153,.36)">ORDECK Dev Studio</div>
+        <div style="font-size:10px;color:rgba(52,211,153,.2);margin-top:1px">JavaScript · HTML · CSS · Python</div>
+      </div>
+    </div>
+    <div class="ds-ed">
+      <div class="ds-tabs" id="ds-tabsrow"></div>
+      <div class="ds-breadcrumb" id="ds-breadcrumb"></div>
+      <div class="ds-code-wrap">
+        <div class="ds-gut" id="ds-gut"></div>
+        <textarea class="ds-ea" id="ds-ed" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="// Start coding here...&#10;// Press Run to see real output." oninput="dsGutter()" onclick="dsGutter()" onkeyup="dsGutter()" onkeydown="dsTabKey(event)"></textarea>
+      </div>
+      <div class="ds-con">
+        <div class="ds-conh">Console<span id="ds-con-clear" onclick="dsClearLog()" style="margin-left:auto;cursor:pointer;color:rgba(52,211,153,.4);text-transform:none;letter-spacing:0">Clear</span></div>
+        <div class="ds-log" id="ds-log"></div>
+      </div>
+      <div class="vsc-statusbar">
+        <div class="vsc-stat-l"><span><i class="ti ti-git-branch" aria-hidden="true"></i>main</span><span id="ds-stat-status"><i class="ti ti-circle-check" aria-hidden="true"></i>Ready</span></div>
+        <div class="vsc-stat-r"><span>Ln <span id="ds-stat-ln">1</span>, Col <span id="ds-stat-col">1</span></span><span>Spaces: 2</span><span>UTF-8</span><span>LF</span><span id="ds-stat-lang">JavaScript</span></div>
+      </div>
+    </div>
+    <div class="ds-prev">
+      <div class="ds-ph"><span>Output</span><span id="ds-badge" style="color:rgba(52,211,153,.4);font-size:9px">● Ready</span></div>
+      <div class="ds-game" id="ds-game" style="display:none"><canvas id="ds-gc" width="176" height="148"></canvas></div>
+      <div id="ds-preview-box" style="display:none;width:100%;flex:1;background:#fff;overflow:hidden">
+        <iframe id="ds-preview-frame" style="width:100%;height:100%;border:none" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+      <div id="ds-output-box" style="flex:1;overflow-y:auto;padding:.6rem;font-family:var(--mono);font-size:11px;line-height:1.7;color:rgba(52,211,153,.3);text-align:center">
+        Write code and press <b style="color:#34d399">Run</b> to see real output here.
+      </div>
+      <div class="ds-stats">
+        <div class="ds-si"><span class="ds-sk">Lang </span><span class="ds-sv" id="ds-runlang">JS</span></div>
+        <div class="ds-si"><span class="ds-sk">Lines </span><span class="ds-sv" id="ds-linecount">0</span></div>
+        <div class="ds-si"><span class="ds-sk">Status </span><span class="ds-sv" id="ds-runstatus">Idle</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SETTINGS -->
+<div class="screen z1" id="s-settings" style="background:var(--bg)">
+  <div class="app-nav">
+    <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+    <div class="nav-right"><button class="back-btn" onclick="go('s-home')">← Home</button></div>
+  </div>
+  <div class="set-lay">
+    <div class="set-side">
+      <div class="set-ph"><div class="set-av">ZK</div><div class="set-pn">Zero K</div><div class="set-tier">Standard</div></div>
+      <div class="set-grp">Account</div>
+      <div class="set-ni sel" onclick="setT(this,'sp')"><i class="ti ti-user" aria-hidden="true"></i>Profile</div>
+      <div class="set-ni" onclick="setT(this,'sb')"><i class="ti ti-credit-card" aria-hidden="true"></i>Billing</div>
+      <div class="set-ni" onclick="setT(this,'ss')"><i class="ti ti-lock" aria-hidden="true"></i>Security</div>
+      <div class="set-ni" onclick="setT(this,'sfriends')" id="set-ni-friends"><i class="ti ti-users" aria-hidden="true"></i>Friends <span id="set-friends-badge" style="display:none;margin-left:auto;min-width:16px;height:16px;border-radius:8px;background:#f87171;font-family:var(--mono);font-size:8px;color:#fff;align-items:center;justify-content:center;padding:0 3px"></span></div>
+      <div class="set-grp">Preferences</div>
+      <div class="set-ni" onclick="setT(this,'sa')"><i class="ti ti-palette" aria-hidden="true"></i>Appearance</div>
+      <div class="set-ni" onclick="setT(this,'sn')"><i class="ti ti-bell" aria-hidden="true"></i>Notifications</div>
+      <div class="set-ni" onclick="setT(this,'sc')"><i class="ti ti-cloud" aria-hidden="true"></i>Storage</div>
+      <div class="set-grp">Studios</div>
+      <div class="set-ni" onclick="setT(this,'sau')"><i class="ti ti-music" aria-hidden="true"></i>Audio</div>
+      <div class="set-ni" onclick="setT(this,'sed')"><i class="ti ti-code" aria-hidden="true"></i>Editor</div>
+      <div class="set-grp" style="margin-top:.8rem">Info</div>
+      <div class="set-ni" onclick="setT(this,'sabout')"><i class="ti ti-info-circle" aria-hidden="true"></i>About</div>
+    </div>
+    <div class="set-con set-tc">
+      <div id="sp" class="on"><div class="set-st">Profile</div><div class="set-ss">Manage your ORDECK identity.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Name</div></div><input class="set-inp" value="Zero K"></div><div class="set-row"><div><div class="set-rl">Username</div></div><input class="set-inp" value="@zerok"></div><div class="set-row"><div><div class="set-rl">Email</div></div><input class="set-inp" value="zerok@ordeck.app"></div></div><button class="set-btn p" style="margin-top:.5rem">Save changes</button></div>
+      <div id="sb"><div class="set-st">Billing</div><div class="set-ss">Manage your plan.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Plan</div><div class="set-rs">Limited tools and effects</div></div><span id="billing-plan-badge" style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.32);border:.5px solid rgba(200,200,220,.13);padding:2px 7px">Standard — Free</span></div><div class="set-row"><div><div class="set-rl">Storage</div></div><span id="billing-storage" style="font-family:var(--mono);font-size:11px;color:#f59e0b">1.6 GB / 2 GB</span></div><div class="set-row"><div><div class="set-rl">Projects</div></div><span id="billing-projects" style="font-family:var(--mono);font-size:11px;color:#f59e0b">2 / 3</span></div></div><div class="up-strip" id="billing-upstrip"><div class="up-t">Unlock <b>Prototype+</b> — unlimited storage, all effects, AI tools.</div><button class="up-btn" onclick="go('s-payment')">Upgrade ↗</button></div><div class="redeem-box"><div class="redeem-t">Redeem a code</div><div class="redeem-row"><input class="set-inp" id="redeem-inp" placeholder="Enter a code" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter')redeemCode()"><button class="set-btn p" onclick="redeemCode()">Redeem</button></div><div class="redeem-msg" id="redeem-msg"></div></div></div>
+      <div id="ss"><div class="set-st">Security</div><div class="set-ss">Keep your account safe.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Password</div><div class="set-rs">Last changed 30 days ago</div></div><button class="set-btn p">Change</button></div><div class="set-row"><div><div class="set-rl">Two-factor auth</div></div><div class="set-tog off" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div><div class="set-row"><div><div class="set-rl">Active sessions</div><div class="set-rs">2 devices</div></div><button class="set-btn d">Sign out all</button></div></div></div>
+      
+      <div id="sfriends">
+        <div class="set-st">Friends</div>
+        <div class="set-ss">Find people, manage friends and send messages.</div>
+        <div class="set-card" style="margin-bottom:.75rem">
+          <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.5rem">Your Profile Link</div>
+          <div style="font-family:var(--mono);font-size:11px;color:#c084fc;padding:.4rem;background:rgba(139,92,246,.06);border:.5px solid rgba(139,92,246,.15);word-break:break-all" id="set-friends-link">Log in to see your profile link</div>
+          <button class="set-btn p" style="margin-top:.5rem" onclick="friendsCopyLink()">Copy link</button>
+        </div>
+        <div class="set-card" style="margin-bottom:.75rem">
+          <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.5rem">Find a User</div>
+          <div class="fp-search-row">
+            <input class="fp-search-inp" id="set-friends-search" placeholder="Enter email address..." type="email">
+            <button class="fp-search-btn" onclick="friendsSearch(document.getElementById('set-friends-search').value,'set-friends-results')">Search</button>
+          </div>
+          <div id="set-friends-results"></div>
+        </div>
+        <div class="set-card" style="margin-bottom:.75rem">
+          <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.5rem">Friend Requests</div>
+          <div id="set-requests-list"></div>
+        </div>
+        <div class="set-card">
+          <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.5rem">Your Friends</div>
+          <div id="set-friends-list"></div>
+        </div>
+      </div>
+      <div id="sa">
+  <div class="set-st">Appearance</div>
+  <div class="set-ss">Choose a background theme and customise ORDECK's look.</div>
+  <div class="set-card" style="margin-bottom:.75rem">
+    <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.65rem">Background Theme</div>
+    <div class="theme-grid">
+      <div class="theme-opt sel" id="theme-opt-cyberpunk" onclick="applyTheme('cyberpunk',this)">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#05050f,#0d0d20);border:.5px solid rgba(139,92,246,.25)">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(139,92,246,.08) 0,rgba(139,92,246,.08) 1px,transparent 1px,transparent 8px)"></div>
+          <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:30px;height:2px;background:#8b5cf6;border-radius:1px"></div>
+        </div>
+        <div class="theme-name">Cyberpunk</div>
+        <div class="sel-check">✓</div>
+      </div>
+      <div class="theme-opt" id="theme-opt-forest" onclick="applyTheme('forest',this)">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#020d06,#061f0d);border:.5px solid rgba(16,185,129,.2)">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(16,185,129,.08) 0,rgba(16,185,129,.08) 1px,transparent 1px,transparent 8px)"></div>
+          <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:30px;height:2px;background:#10b981;border-radius:1px"></div>
+        </div>
+        <div class="theme-name">Midnight Forest</div>
+        <div class="sel-check">✓</div>
+      </div>
+      <div class="theme-opt" id="theme-opt-solar" onclick="applyTheme('solar',this)">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#0f0500,#220b00);border:.5px solid rgba(249,115,22,.2)">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(249,115,22,.08) 0,rgba(249,115,22,.08) 1px,transparent 1px,transparent 8px)"></div>
+          <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:30px;height:2px;background:#f97316;border-radius:1px"></div>
+        </div>
+        <div class="theme-name">Solar Flare</div>
+        <div class="sel-check">✓</div>
+      </div>
+    </div>
+    <div id="premium-bg-section" style="display:none">
+      <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.45rem">Custom Background <span style="color:#c084fc">(Prototype+)</span></div>
+      <div class="premium-bg-upload" onclick="uploadCustomBg()">
+        <i class="ti ti-photo-up" aria-hidden="true"></i>
+        <span id="custom-bg-lbl">Click to upload an image</span>
+      </div>
+      <div style="margin-top:.4rem;display:flex;gap:.4rem">
+        <input class="admin-inp" id="custom-bg-color" type="color" value="#05050f" style="width:36px;height:28px;padding:2px;cursor:pointer" oninput="applyCustomBgColor(this.value)" title="Pick background colour">
+        <span style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.35);align-self:center">or pick a colour</span>
+      </div>
+    </div>
+  </div>
+  <div class="set-card">
+    <div class="set-row"><div><div class="set-rl">Neon background</div></div><div class="set-tog" id="neon-tog" onclick="toggleNeon(this)"><div class="set-tog-t"></div></div></div>
+    <div class="set-row"><div><div class="set-rl">Reduce motion</div></div><div class="set-tog off" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div>
+  </div>
+</div>
+      <div id="sn"><div class="set-st">Notifications</div><div class="set-ss">Control what ORDECK notifies you about.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Export complete</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div><div class="set-row"><div><div class="set-rl">New features</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div><div class="set-row"><div><div class="set-rl">Billing alerts</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div></div></div>
+      <div id="sc"><div class="set-st">Storage</div><div class="set-ss">Files and cloud connections.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Local</div></div><span class="set-val">1.6 GB / 2 GB</span></div><div class="set-row"><div><div class="set-rl">Google Drive</div></div><button class="set-btn p">Connect</button></div><div class="set-row"><div><div class="set-rl">Dropbox</div></div><button class="set-btn p">Connect</button></div><div class="set-row"><div><div class="set-rl">ORDECK Cloud</div><div class="set-rs">Prototype+ only</div></div><span id="cloud-lock-status" style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.2)">Locked</span></div></div></div>
+      <div id="sau"><div class="set-st">Audio</div><div class="set-ss">Configure Tidal Beat and background music.</div>
+<div class="set-card" style="margin-bottom:.75rem">
+  <div class="set-row"><div><div class="set-rl" style="font-size:13px;font-weight:500;color:#fff">Background Music</div><div class="set-rs">Plays while you create</div></div><div class="set-tog" id="bgm-setting-tog" onclick="bgmSettingToggle(this)"><div class="set-tog-t"></div></div></div>
+  <div class="set-row"><div><div class="set-rl">Volume</div></div><input class="bgm-vol" type="range" min="0" max="1" step="0.01" value="0.35" oninput="bgmSetVol(this.value)" style="width:100px"></div>
+</div>
+<div class="set-card" style="margin-bottom:.75rem">
+  <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.65rem">Choose Track</div>
+  <div class="bgm-track-opt sel" id="bto-0" onclick="bgmGoTo(0);bgmSelectOpt(0)"><i class="ti ti-wave-sine" aria-hidden="true"></i><div><div class="bgm-track-name">Cosmic Drift</div><div class="bgm-track-desc">Chill, floating, ambient — good for long sessions</div></div></div>
+  <div class="bgm-track-opt" id="bto-1" onclick="bgmGoTo(1);bgmSelectOpt(1)"><i class="ti ti-planet" aria-hidden="true"></i><div><div class="bgm-track-name">Deep Orbit</div><div class="bgm-track-desc">Space-like, cinematic, atmospheric</div></div></div>
+  <div class="bgm-track-opt" id="bto-2" onclick="bgmGoTo(2);bgmSelectOpt(2)"><i class="ti ti-volume-off" aria-hidden="true"></i><div><div class="bgm-track-name">Silence</div><div class="bgm-track-desc">No background music</div></div></div>
+</div>
+<div class="set-card">
+  <div style="font-family:var(--mono);font-size:9px;color:rgba(200,200,220,.28);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.65rem">Your Own Music</div>
+  <div class="set-row"><div><div class="set-rl">Upload a track from your device</div><div class="set-rs">MP3, WAV, OGG supported</div></div><button class="set-btn p" onclick="bgmUpload()">Choose File</button></div>
+  <div id="bgm-custom-name" style="font-size:11px;color:rgba(139,92,246,.5);font-family:var(--mono);margin-top:.35rem;display:none"></div>
+</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Default BPM</div></div><input class="set-inp" value="120" style="width:70px" type="number"></div><div class="set-row"><div><div class="set-rl">Sample rate</div></div><span class="set-val">44.1 kHz</span></div><div class="set-row"><div><div class="set-rl">Auto-save recordings</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div></div></div>
+      <div id="sed"><div class="set-st">Editor</div><div class="set-ss">Configure Dev Studio.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Font size</div></div><input class="set-inp" value="11" style="width:70px" type="number"></div><div class="set-row"><div><div class="set-rl">Tab size</div></div><input class="set-inp" value="2" style="width:70px" type="number"></div><div class="set-row"><div><div class="set-rl">Auto-save</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div><div class="set-row"><div><div class="set-rl">Line numbers</div></div><div class="set-tog" onclick="this.classList.toggle('off')"><div class="set-tog-t"></div></div></div></div><button class="set-btn d" style="margin-top:.5rem">Reset to defaults</button></div>
+      <div id="sabout"><div class="set-st">About</div><div class="set-ss">ORDECK — Tidal Beat, Visual Studio &amp; Dev Studio in one creative suite.</div><div class="set-card"><div class="set-row"><div><div class="set-rl">Version</div></div><span class="set-val">0.1.0 — Prototype</span></div><div class="set-row"><div><div class="set-rl">Developer</div></div><span class="set-val">Shayne M. Mwaniki</span></div><div class="set-row"><div><div class="set-rl">Engine</div></div><span class="set-val">ORDECK Web Runtime</span></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div class="screen z1" id="s-payment" style="background:var(--bg);align-items:center;justify-content:center;padding:2rem 1rem">
+  <div style="width:100%;display:flex;flex-direction:column">
+    <div class="app-nav">
+      <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+      <div class="nav-right"><button class="back-btn" onclick="go('s-home')">← Back</button></div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1rem">
+      <div class="pay-box">
+        <div class="pay-hd"><div class="pay-title">Unlock Prototype+</div><button class="pay-close" onclick="go('s-home')" aria-label="Close">✕</button></div>
+        <div class="pay-b">
+          <div class="plan-sw">
+            <div class="ps-o sel" id="ps-m" onclick="payPlan('m')"><div class="ps-on">Monthly</div><div class="ps-op" id="psp-m">$12 / month</div></div>
+            <div class="ps-o" id="ps-l" onclick="payPlan('l')"><div class="ps-on">Lifetime</div><div class="ps-op">$89 — forever</div></div>
+          </div>
+          <div class="pay-price-b"><div class="pay-price" id="pay-price">$12 <b>/ month</b></div><div class="pay-note" id="pay-note">Cancel anytime · KES 1,500/mo</div></div>
+          <div class="pay-feats">
+            <div class="pay-feat"><i class="ti ti-check" aria-hidden="true"></i>Unlimited projects and 100GB storage</div>
+            <div class="pay-feat"><i class="ti ti-check" aria-hidden="true"></i>All advanced effects, plugins and shaders</div>
+            <div class="pay-feat"><i class="ti ti-check" aria-hidden="true"></i>AI tools across all three studios</div>
+            <div class="pay-feat"><i class="ti ti-check" aria-hidden="true"></i>Clean exports — no watermarks</div>
+            <div class="pay-feat"><i class="ti ti-check" aria-hidden="true"></i>Publish games and animations publicly</div>
+          </div>
+          <div class="pay-form">
+            <div><div class="pf-l">Cardholder name</div><input class="pf-i" type="text" placeholder="Full name on card"></div>
+            <div><div class="pf-l">Card number</div><input class="pf-i" type="text" placeholder="•••• •••• •••• ••••" maxlength="19"></div>
+            <div class="pf-row">
+              <div><div class="pf-l">Expiry</div><input class="pf-i" type="text" placeholder="MM / YY" maxlength="7"></div>
+              <div><div class="pf-l">CVV</div><input class="pf-i" type="text" placeholder="•••" maxlength="4"></div>
+            </div>
+          </div>
+          <button class="pay-submit" onclick="sendPrompt('I upgraded to ORDECK Prototype+ — what unlocks now?')">Unlock Prototype+ ↗</button>
+          <div class="pay-sec"><i class="ti ti-lock" aria-hidden="true"></i>Secured by Stripe · SSL encrypted</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+  <div class="enlarge-content" id="enlarge-content"></div>
+</div>
+<!-- AUTH GATE MODAL -->
+<div class="auth-gate" id="auth-gate">
+  <div class="gate-box">
+    <div class="gate-icon"><i class="ti ti-lock" aria-hidden="true"></i></div>
+    <div class="gate-title">Sign in to continue</div>
+    <div class="gate-desc">You need an ORDECK account to use the studios. It's free — create one in seconds.</div>
+    <div class="gate-btns">
+      <button class="gate-btn-p" onclick="closeAuthGate();go('s-auth')">Sign in / Create account</button>
+      <button class="gate-btn-s" onclick="closeAuthGate()">Not now</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREMIUM GATE MODAL -->
+<div class="prem-gate" id="prem-gate">
+  <div class="prem-box">
+    <i class="prem-icon ti ti-crown" aria-hidden="true"></i>
+    <div class="prem-title">This is a Prototype+ feature</div>
+    <div class="prem-desc" id="prem-gate-desc">Upgrade to unlock this feature and everything else in ORDECK.</div>
+    <div class="prem-feats">
+      <div class="prem-feat"><i class="ti ti-check" aria-hidden="true"></i>Unlimited projects and 100GB storage</div>
+      <div class="prem-feat"><i class="ti ti-check" aria-hidden="true"></i>All AI tools — AI Assist, AI Animate, AI Code</div>
+      <div class="prem-feat"><i class="ti ti-check" aria-hidden="true"></i>Clean exports — no watermarks</div>
+      <div class="prem-feat"><i class="ti ti-check" aria-hidden="true"></i>Advanced effects, EQ and FX chains</div>
+      <div class="prem-feat"><i class="ti ti-check" aria-hidden="true"></i>Publish games and animations publicly</div>
+    </div>
+    <div class="prem-btns">
+      <button class="prem-btn-p" onclick="closePremGate();go('s-payment')">Upgrade to Prototype+ ↗</button>
+      <button class="prem-btn-s" onclick="closePremGate()">Not now — go back</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTRUMENTS OVERLAY -->
+<div class="tb-inst-overlay" id="tb-inst-overlay">
+  <div class="tb-inst-box">
+    <div class="tb-inst-hd">
+      <span class="tb-inst-title"><i class="ti ti-piano" aria-hidden="true"></i> Instruments</span>
+      <div class="tb-inst-tabs">
+        <button class="tb-inst-tab sel" onclick="instTab(this,'drums')">Drum Pads</button>
+        <button class="tb-inst-tab" onclick="instTab(this,'piano')">Piano</button>
+        <button class="tb-inst-tab" onclick="instTab(this,'recs')">My Recordings</button>
+      </div>
+      <button class="tb-inst-close" onclick="closeInstruments()">✕ Close</button>
+    </div>
+    <!-- DRUM PADS -->
+    <div class="tb-inst-body active" id="inst-drums">
+      <div class="drum-grid" id="drum-grid"></div>
+      <div class="drum-info">Press a pad or use keyboard shortcuts (Q W E R A S D F Z X C V) — your hits are recorded live into the beat</div>
+    </div>
+    <!-- PIANO -->
+    <div class="tb-inst-body" id="inst-piano">
+      <div class="piano-octave-ctrl">
+        <span>Octave</span>
+        <button class="piano-oct-btn" onclick="pianoOctDown()">−</button>
+        <span class="piano-note-display" id="piano-oct-lbl">4</span>
+        <button class="piano-oct-btn" onclick="pianoOctUp()">+</button>
+        <span style="margin-left:1rem">Last note: <span id="piano-last-note" style="color:#c084fc">—</span></span>
+        <button class="tb-inst-tab" style="margin-left:auto;padding:4px 12px" onclick="pianoStartRecord()" id="piano-rec-btn">⏺ Record to track</button>
+      </div>
+      <div class="piano-wrap">
+        <div class="piano-keys" id="piano-keys"></div>
+      </div>
+      <div class="piano-recorded" id="piano-recorded-info">Play notes above — they'll be added as a melody track when you click Record.</div>
+    </div>
+    <!-- RECORDINGS -->
+    <div class="tb-inst-body" id="inst-recs">
+      <div style="font-family:var(--mono);font-size:11px;color:rgba(192,132,252,.45);margin-bottom:.65rem">Your mic recordings. Click ▶ to preview, then <b>Add to Beat</b> to mix it into your project.</div>
+      <div id="inst-recs-list"></div>
+      <div style="margin-top:.5rem">
+        <button class="tb-inst-tab sel" style="padding:6px 16px" onclick="tbToggleRec()"><i class="ti ti-microphone" aria-hidden="true"></i> New Recording</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BACKGROUND MUSIC BAR -->
+<div class="bgm-bar" id="bgm-bar">
+  <button class="bgm-btn" id="bgm-prev" onclick="bgmPrev()" title="Previous"><i class="ti ti-player-skip-back" aria-hidden="true"></i></button>
+  <button class="bgm-btn active" id="bgm-play" onclick="bgmToggle()" title="Play/Pause"><i class="ti ti-player-pause" id="bgm-play-icon" aria-hidden="true"></i></button>
+  <button class="bgm-btn" id="bgm-next" onclick="bgmNext()" title="Next"><i class="ti ti-player-skip-forward" aria-hidden="true"></i></button>
+  <div class="bgm-track"><b id="bgm-track-name">Cosmic Drift</b> &nbsp;·&nbsp; ORDECK Soundtrack</div>
+  <div class="bgm-dots" id="bgm-dots">
+    <div class="bgm-dot on" onclick="bgmGoTo(0)" title="Cosmic Drift"></div>
+    <div class="bgm-dot" onclick="bgmGoTo(1)" title="Deep Orbit"></div>
+    <div class="bgm-dot" onclick="bgmGoTo(2)" title="Silence"></div>
+  </div>
+  <input class="bgm-vol" type="range" min="0" max="1" step="0.01" value="0.35" oninput="bgmSetVol(this.value)" title="Volume">
+  <button class="bgm-btn" onclick="bgmHide()" title="Hide player" style="font-size:10px;width:18px;height:18px;opacity:.4">×</button>
+</div>
+
+<!-- ENLARGE OVERLAY -->
+<div class="enlarge-overlay" id="enlarge-overlay">
+  <div class="enlarge-topbar">
+    <span class="enlarge-title" id="enlarge-label">ORDECK - Fullscreen View</span>
+    <button class="enlarge-close" onclick="closeEnlarge()">X Close</button>
+  </div>
+  <div class="enlarge-content" id="enlarge-content"></div>
+</div>
+<script src="js/supabase.js"></script>
+  <script src="js/app.js"></script>
+
+<!-- ADMIN PANEL -->
+<div class="screen z1" id="s-admin">
+  <div class="admin-topbar">
+    <span class="admin-logo"><i class="ti ti-shield-lock" aria-hidden="true"></i> ORDECK ADMIN</span>
+    <span class="admin-badge">Root Access</span>
+    <button class="back-btn" onclick="go('s-home')" style="margin-left:auto;border-color:rgba(248,113,113,.25);color:rgba(248,113,113,.5)">← Home</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-section-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Platform Stats</div>
+    <div class="admin-grid" id="admin-stats-grid"></div>
+
+    <div class="admin-section-title"><i class="ti ti-users" aria-hidden="true"></i> User Management</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-user-search" aria-hidden="true"></i> Find User</div>
+        <input class="admin-inp" id="admin-user-search" type="email" placeholder="user@email.com">
+        <button class="admin-cmd" onclick="adminFindUser()"><i class="ti ti-search" aria-hidden="true"></i> Look up account</button>
+        <div id="admin-user-result" style="font-family:var(--mono);font-size:11px;color:rgba(248,113,113,.6);min-height:20px"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-crown" aria-hidden="true"></i> Grant Premium</div>
+        <input class="admin-inp" id="admin-grant-email" type="email" placeholder="user@email.com">
+        <button class="admin-cmd" onclick="adminGrantPremium()"><i class="ti ti-star" aria-hidden="true"></i> Grant Prototype+</button>
+        <button class="admin-cmd" onclick="adminRevokePremium()"><i class="ti ti-star-off" aria-hidden="true"></i> Revoke Premium</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-trash" aria-hidden="true"></i> Delete Account</div>
+        <input class="admin-inp" id="admin-del-email" type="email" placeholder="user@email.com">
+        <button class="admin-cmd" onclick="adminDeleteUser()" style="color:#f87171"><i class="ti ti-user-x" aria-hidden="true"></i> Delete user permanently</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-settings" aria-hidden="true"></i> Platform Controls</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-database" aria-hidden="true"></i> Data</div>
+        <button class="admin-cmd" onclick="adminExportDB()"><i class="ti ti-download" aria-hidden="true"></i> Export full DB (JSON)</button>
+        <button class="admin-cmd" onclick="adminClearProjects()"><i class="ti ti-files-off" aria-hidden="true"></i> Clear all projects</button>
+        <button class="admin-cmd" onclick="adminResetDB()" style="color:#f87171"><i class="ti ti-alert-triangle" aria-hidden="true"></i> RESET ENTIRE DATABASE</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-broadcast" aria-hidden="true"></i> Broadcast</div>
+        <textarea class="admin-inp" id="admin-broadcast-msg" rows="3" placeholder="Message to show all users on next login..."></textarea>
+        <button class="admin-cmd" onclick="adminBroadcast()"><i class="ti ti-send" aria-hidden="true"></i> Set broadcast message</button>
+        <button class="admin-cmd" onclick="adminClearBroadcast()"><i class="ti ti-x" aria-hidden="true"></i> Clear message</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-key" aria-hidden="true"></i> Coupon Codes</div>
+        <input class="admin-inp" id="admin-new-code" type="text" placeholder="New coupon code">
+        <button class="admin-cmd" onclick="adminAddCode()"><i class="ti ti-plus" aria-hidden="true"></i> Add coupon code</button>
+        <div id="admin-codes-list" style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);margin-top:.35rem;line-height:1.8"></div>
+      </div>
+    </div>
+
+
+    <div class="admin-section-title"><i class="ti ti-chart-line" aria-hidden="true"></i> Growth Analytics</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Account Growth</div>
+        <div id="admin-growth-stats"></div>
+        <canvas id="admin-growth-chart" height="80" style="margin-top:.5rem;width:100%"></canvas>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-activity" aria-hidden="true"></i> Platform Activity</div>
+        <div id="admin-activity-stats"></div>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-world" aria-hidden="true"></i> Published Projects</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-music" aria-hidden="true"></i> By Studio</div>
+        <div id="admin-proj-stats"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-star" aria-hidden="true"></i> Top Projects</div>
+        <div id="admin-top-projs"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-flag" aria-hidden="true"></i> Moderate Projects</div>
+        <div id="admin-proj-moderate-list" style="max-height:120px;overflow-y:auto;margin-bottom:.35rem"></div>
+        <input class="admin-inp" id="admin-remove-proj-id" placeholder="Project ID to remove">
+        <button class="admin-cmd" onclick="adminRemoveProject()" style="color:#f87171"><i class="ti ti-trash" aria-hidden="true"></i> Remove project by ID</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-users-group" aria-hidden="true"></i> Friend & Message Network</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-network" aria-hidden="true"></i> Social Stats</div>
+        <div id="admin-social-stats"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-message-report" aria-hidden="true"></i> Message Volume</div>
+        <div id="admin-msg-stats"></div>
+        <button class="admin-cmd" onclick="adminClearAllMessages()" style="color:#f87171;margin-top:.35rem"><i class="ti ti-messages-off" aria-hidden="true"></i> Clear ALL messages</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-lock" aria-hidden="true"></i> Security & Sessions</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-eye" aria-hidden="true"></i> Active Sessions</div>
+        <div id="admin-sessions-list"></div>
+        <button class="admin-cmd" onclick="adminKillAllSessions()" style="color:#f87171;margin-top:.35rem"><i class="ti ti-logout" aria-hidden="true"></i> Force logout ALL users</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-ban" aria-hidden="true"></i> Ban / Unban</div>
+        <input class="admin-inp" id="admin-ban-email" type="email" placeholder="user@email.com">
+        <button class="admin-cmd" onclick="adminBanUser()"><i class="ti ti-ban" aria-hidden="true"></i> Ban user</button>
+        <button class="admin-cmd" onclick="adminUnbanUser()"><i class="ti ti-circle-check" aria-hidden="true"></i> Unban user</button>
+        <div style="font-family:var(--mono);font-size:9px;color:rgba(248,113,113,.4);margin-top:.35rem">Banned users cannot log in.</div>
+        <div id="admin-banned-list" style="margin-top:.4rem;font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.5);max-height:80px;overflow-y:auto"></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-shield-check" aria-hidden="true"></i> Audit Log</div>
+        <div class="admin-log" id="admin-audit-log" style="height:130px"></div>
+        <button class="admin-cmd" onclick="adminClearAudit()" style="margin-top:.35rem"><i class="ti ti-eraser" aria-hidden="true"></i> Clear audit log</button>
+      </div>
+    </div>
+
+    <div class="admin-section-title"><i class="ti ti-palette" aria-hidden="true"></i> Platform Customisation</div>
+    <div class="admin-grid">
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-speakerphone" aria-hidden="true"></i> MOTD Banner</div>
+        <textarea class="admin-inp" id="admin-motd-text" rows="2" placeholder="Message of the day shown on home screen..."></textarea>
+        <div style="display:flex;gap:.35rem;align-items:center;margin-bottom:.35rem">
+          <select class="admin-inp" id="admin-motd-type" style="flex:1;cursor:pointer">
+            <option value="info">ℹ Info</option>
+            <option value="success">✅ Success</option>
+            <option value="warning">⚠️ Warning</option>
+            <option value="error">🚨 Alert</option>
+          </select>
+        </div>
+        <button class="admin-cmd" onclick="adminSetMOTD()"><i class="ti ti-check" aria-hidden="true"></i> Set banner</button>
+        <button class="admin-cmd" onclick="adminClearMOTD()"><i class="ti ti-x" aria-hidden="true"></i> Clear banner</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-tools" aria-hidden="true"></i> Maintenance Mode</div>
+        <div id="admin-maint-status" style="font-family:var(--mono);font-size:11px;color:rgba(52,211,153,.6);margin-bottom:.5rem">● System online</div>
+        <textarea class="admin-inp" id="admin-maint-msg" rows="2" placeholder="Maintenance message to show users..."></textarea>
+        <button class="admin-cmd" onclick="adminToggleMaintenance()"><i class="ti ti-tool" aria-hidden="true"></i> Toggle maintenance mode</button>
+        <div class="admin-card-title" style="margin-top:.75rem"><i class="ti ti-discount" aria-hidden="true"></i> Bulk Grant Premium</div>
+        <button class="admin-cmd" onclick="adminGrantAllPremium()"><i class="ti ti-crown" aria-hidden="true"></i> Grant Prototype+ to ALL users</button>
+        <button class="admin-cmd" onclick="adminRevokeAllPremium()" style="color:#f87171"><i class="ti ti-crown-off" aria-hidden="true"></i> Revoke all premium</button>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title"><i class="ti ti-download" aria-hidden="true"></i> Data Export</div>
+        <button class="admin-cmd" onclick="adminExportDB()"><i class="ti ti-database" aria-hidden="true"></i> Export full DB (JSON)</button>
+        <button class="admin-cmd" onclick="adminExportUsers()"><i class="ti ti-users" aria-hidden="true"></i> Export users CSV</button>
+        <button class="admin-cmd" onclick="adminExportProjects()"><i class="ti ti-folder" aria-hidden="true"></i> Export projects JSON</button>
+        <button class="admin-cmd" onclick="adminImportDB()"><i class="ti ti-upload" aria-hidden="true"></i> Import DB backup</button>
+      </div>
+    </div>
+    <div class="admin-section-title"><i class="ti ti-terminal" aria-hidden="true"></i> Console</div>
+    <div style="max-width:600px">
+      <input class="admin-inp" id="admin-console-inp" placeholder="Type a command..." onkeydown="adminConsoleKey(event)">
+      <div class="admin-log" id="admin-log"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- FRIENDS PANEL -->
+<div class="friends-panel" id="friends-panel">
+  <div class="fp-hd">
+    <span class="fp-title"><i class="ti ti-users" aria-hidden="true"></i> Friends</span>
+    <button class="fp-close" onclick="friendsClose()">✕</button>
+  </div>
+  <div class="fp-tabs" id="fp-tabs">
+    <div class="fp-tab sel" onclick="fpTab(this,'friends')" id="fptab-friends">Friends</div>
+    <div class="fp-tab" onclick="fpTab(this,'requests')" id="fptab-requests">Requests<span class="fp-badge" id="fp-req-badge"></span></div>
+    <div class="fp-tab" onclick="fpTab(this,'messages')" id="fptab-messages">Messages<span class="fp-badge" id="fp-msg-badge"></span></div>
+    <div class="fp-tab" onclick="fpTab(this,'find')" id="fptab-find">Find</div>
+  </div>
+  <div class="fp-body" id="fp-body">
+    <!-- Content rendered by JS -->
+  </div>
+</div>
+
+<!-- MESSAGE NOTIF TOAST -->
+<div class="msg-notif" id="msg-notif"></div>
+
+
+<!-- UPLOAD PROJECT MODAL -->
+<div class="upload-modal" id="upload-modal">
+  <div class="upload-box">
+    <div class="upload-hd">
+      <span class="upload-hd-title"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Publish Project</span>
+      <button class="upload-close" onclick="closeUploadModal()">✕</button>
+    </div>
+    <div class="upload-body" id="upload-body">
+      <div class="upload-field">
+        <label class="upload-lbl">Project name *</label>
+        <input class="upload-inp" id="up-name" type="text" placeholder="Give your project a name..." maxlength="60">
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Description</label>
+        <textarea class="upload-textarea" id="up-desc" placeholder="Describe your project — what inspired it, how you made it, tools used..." maxlength="1000"></textarea>
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Studio</label>
+        <div style="font-family:var(--mono);font-size:11px;color:#c084fc;padding:.4rem;background:rgba(139,92,246,.07);border:.5px solid rgba(139,92,246,.18)" id="up-studio-display">—</div>
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Genre / Tags</label>
+        <div class="upload-tag-row" id="up-tags-row"></div>
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Visibility</label>
+        <div class="upload-vis-row">
+          <div class="upload-vis-opt sel" id="up-vis-public" onclick="upSetVis('public')">
+            <i class="ti ti-world" aria-hidden="true"></i>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#e2e2f0">Public</div>
+              <div style="font-size:11px;color:rgba(200,200,220,.4)">Anyone can see it</div>
+            </div>
+          </div>
+          <div class="upload-vis-opt" id="up-vis-private" onclick="upSetVis('private')">
+            <i class="ti ti-lock" aria-hidden="true"></i>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#e2e2f0">Private</div>
+              <div style="font-size:11px;color:rgba(200,200,220,.4)">Only you can see it</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Thumbnail (optional)</label>
+        <div class="upload-thumb-zone" onclick="upPickThumb()" id="up-thumb-zone">
+          <i class="ti ti-photo-plus" aria-hidden="true"></i>
+          <span>Click to upload a thumbnail image</span>
+        </div>
+        <img class="upload-thumb-preview" id="up-thumb-preview" alt="Thumbnail preview">
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">Collaborators (optional)</label>
+        <input class="upload-inp" id="up-collab" type="text" placeholder="email1@example.com, email2@example.com">
+      </div>
+      <div class="upload-field">
+        <label class="upload-lbl">License</label>
+        <select class="upload-inp" id="up-license" style="cursor:pointer">
+          <option value="all-rights">All rights reserved</option>
+          <option value="cc-by">Creative Commons (CC BY)</option>
+          <option value="cc-by-sa">CC BY-SA</option>
+          <option value="cc0">CC0 — Public domain</option>
+        </select>
+      </div>
+    </div>
+    <div class="upload-footer">
+      <button class="upload-cancel" onclick="closeUploadModal()">Cancel</button>
+      <button class="upload-submit" onclick="submitUpload()"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Publish Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPLORE SCREEN -->
+<div class="screen z1" id="s-explore" style="background:var(--bg);flex-direction:column">
+  <div class="app-nav" style="border-color:rgba(139,92,246,.14)">
+    <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+    <div style="font-family:var(--mono);font-size:13px;color:rgba(200,200,220,.5);font-weight:500"><i class="ti ti-compass" aria-hidden="true"></i> Explore</div>
+    <div class="nav-right">
+      <input style="background:#030310;border:.5px solid rgba(139,92,246,.2);color:#e2e2f0;font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;width:200px" id="explore-search" placeholder="Search projects..." oninput="exploreRender()">
+      <button class="back-btn" onclick="go('s-home')">← Home</button>
+    </div>
+  </div>
+  <div style="padding:.6rem 1.5rem;border-bottom:.5px solid rgba(139,92,246,.1);display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;flex-shrink:0">
+    <button class="explore-filter sel" id="ef-all" onclick="exploreFilterFull(this,'all')">All</button>
+    <button class="explore-filter" id="ef-tb" onclick="exploreFilterFull(this,'tb')"><i class="ti ti-music" aria-hidden="true"></i> Beats</button>
+    <button class="explore-filter" id="ef-vs" onclick="exploreFilterFull(this,'vs')"><i class="ti ti-video" aria-hidden="true"></i> Videos</button>
+    <button class="explore-filter" id="ef-ds" onclick="exploreFilterFull(this,'ds')"><i class="ti ti-code" aria-hidden="true"></i> Games</button>
+    <div style="width:.5px;height:16px;background:rgba(139,92,246,.12);margin:0 .2rem"></div>
+    <button class="explore-filter" id="ef-recent" onclick="exploreSort('recent',this)">Recent</button>
+    <button class="explore-filter" id="ef-likes" onclick="exploreSort('likes',this)">Most Liked</button>
+    <button class="explore-filter" id="ef-mine" onclick="exploreSort('mine',this)">My Projects</button>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.28)" id="explore-count"></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:1.25rem 1.5rem">
+    <div class="explore-grid" id="explore-full-grid"></div>
+  </div>
+</div>
+
+<!-- PROJECT DETAIL SCREEN -->
+<div class="screen z1" id="s-proj-view">
+  <div class="app-nav" style="border-color:rgba(139,92,246,.14)">
+    <div class="nav-logo" onclick="go('s-home')"><span class="logo-I-wrap">I</span>OR<b>D</b>ECK</div>
+    <div class="nav-right">
+      <button class="back-btn" id="pv-back-btn" onclick="go('s-explore')">← Explore</button>
+    </div>
+  </div>
+  <div class="pv-hero" id="pv-hero">
+    <div class="pv-hero-placeholder" id="pv-hero-placeholder"><i class="ti ti-music" aria-hidden="true"></i></div>
+    <img class="pv-hero-bg" id="pv-hero-img" src="" alt="" style="display:none">
+    <div class="pv-hero-overlay"></div>
+    <div class="pv-hero-content">
+      <div class="pv-studio-badge" id="pv-studio-badge"></div>
+      <div class="pv-title" id="pv-title">Project Title</div>
+      <div class="pv-author-row">
+        <div class="pv-author-av" id="pv-author-av">?</div>
+        <span id="pv-author-name">Unknown</span>
+        <span style="color:rgba(200,200,220,.2)">·</span>
+        <span id="pv-date"></span>
+      </div>
+    </div>
+  </div>
+  <div class="pv-body" id="pv-body">
+    <div class="pv-grid" id="pv-grid">
+      <div class="pv-main">
+        <div class="pv-actions" id="pv-actions"></div>
+        <div class="pv-tags" id="pv-tags"></div>
+        <div class="pv-desc" id="pv-desc"></div>
+        <div class="pv-comments-title">Comments</div>
+        <div id="pv-comments-list"></div>
+        <div class="pv-comment-inp-row" id="pv-comment-inp-row">
+          <input class="pv-comment-inp" id="pv-comment-inp" placeholder="Leave a comment..." onkeydown="if(event.key==='Enter')pvSubmitComment()">
+          <button class="pv-comment-send" onclick="pvSubmitComment()">Post</button>
+        </div>
+      </div>
+      <div class="pv-sidebar">
+        <div class="pv-info-card">
+          <div class="pv-info-title">Project Info</div>
+          <div id="pv-info-rows"></div>
+          <button class="pv-like-btn" id="pv-like-btn" onclick="pvToggleLike()"><i class="ti ti-heart" aria-hidden="true"></i> <span id="pv-like-count">0</span> Likes</button>
+        </div>
+        <div class="pv-info-card" id="pv-admin-card" style="display:none">
+          <div class="pv-info-title">Owner Controls</div>
+          <button class="pv-btn danger" style="width:100%;justify-content:center;margin-top:.25rem" onclick="pvDeleteProject()"><i class="ti ti-trash" aria-hidden="true"></i> Delete project</button>
+          <button class="pv-btn outline" style="width:100%;justify-content:center;margin-top:.35rem" onclick="pvToggleVisibility()"><i class="ti ti-eye" aria-hidden="true"></i> <span id="pv-vis-btn-lbl">Toggle visibility</span></button>
+        </div>
+        <div class="pv-info-card" id="pv-collab-card" style="display:none">
+          <div class="pv-info-title">Collaborators</div>
+          <div id="pv-collabs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- GROUPS PANEL -->
+<div class="groups-panel" id="groups-panel">
+  <div class="gp-hd">
+    <span class="gp-title"><i class="ti ti-users-group" aria-hidden="true"></i> Groups</span>
+    <button class="gp-new-btn" onclick="openCreateGroupModal()"><i class="ti ti-plus" aria-hidden="true"></i> New</button>
+    <button class="gp-close" onclick="groupsClose()">&#10005;</button>
+  </div>
+  <div class="gp-tabs">
+    <div class="gp-tab sel" id="gptab-mygroups" onclick="gpTab(this,'mygroups')">My Groups</div>
+    <div class="gp-tab" id="gptab-discover" onclick="gpTab(this,'discover')">Discover</div>
+    <div class="gp-tab" id="gptab-join" onclick="gpTab(this,'join')">Join Code</div>
+  </div>
+  <div class="gp-body" id="gp-body"><div class="gp-empty">Loading...</div></div>
+</div>
+
+<!-- GROUP DETAIL SCREEN -->
+<div class="screen z1" id="s-group">
+  <div class="grp-topbar">
+    <button class="back-btn" onclick="groupsOpen()">Back</button>
+    <div class="grp-av-sm" id="grp-detail-av" style="background:#8b5cf6">G</div>
+    <span class="grp-name" id="grp-detail-name">Group</span>
+    <span class="grp-studio-badge" id="grp-detail-badge">ALL</span>
+    <button class="gp-new-btn" onclick="grpShowInvite()"><i class="ti ti-user-plus" aria-hidden="true"></i> Invite</button>
+    <button class="back-btn" onclick="go('s-home')">Home</button>
+  </div>
+  <div class="grp-layout">
+    <div class="grp-chat">
+      <div class="grp-chat-tabs">
+        <div class="grp-chat-tab sel" onclick="grpChatTab(this,'chat')">Chat</div>
+        <div class="grp-chat-tab" onclick="grpChatTab(this,'activity')">Activity</div>
+      </div>
+      <div class="grp-msgs" id="grp-msgs"></div>
+      <div class="grp-input-area">
+        <div class="grp-inp-btns">
+          <button class="grp-inp-btn" onclick="grpShareProject()" title="Share project"><i class="ti ti-file-plus" aria-hidden="true"></i></button>
+        </div>
+        <textarea class="grp-inp" id="grp-inp" rows="1" placeholder="Message the group..." onkeydown="grpInpKey(event)"></textarea>
+        <button class="grp-send-btn" onclick="grpSend()">Send</button>
+      </div>
+    </div>
+    <div class="grp-sidebar">
+      <div class="grp-sidebar-tabs">
+        <div class="grp-stab sel" onclick="grpSTab(this,'members')">Members</div>
+        <div class="grp-stab" onclick="grpSTab(this,'tasks')">Tasks</div>
+        <div class="grp-stab" onclick="grpSTab(this,'projects')">Projects</div>
+      </div>
+      <div class="grp-sidebar-body" id="grp-sidebar-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE GROUP MODAL -->
+<div class="grp-modal" id="create-group-modal">
+  <div class="grp-modal-box">
+    <div class="grp-modal-hd">
+      <span class="grp-modal-title">Create a Group</span>
+      <button class="grp-modal-close" onclick="closeCreateGroupModal()">&#10005;</button>
+    </div>
+    <div class="grp-modal-body">
+      <div class="grp-field"><label class="grp-label">Group name *</label><input class="grp-input" id="grp-new-name" type="text" placeholder="e.g. Beat Squad..." maxlength="40"></div>
+      <div class="grp-field"><label class="grp-label">Description</label><input class="grp-input" id="grp-new-desc" type="text" placeholder="What is this group about?" maxlength="120"></div>
+      <div class="grp-field"><label class="grp-label">Colour</label><div class="grp-color-row" id="grp-color-row"></div></div>
+      <div class="grp-field"><label class="grp-label">Studio focus</label>
+        <div class="grp-studio-opts">
+          <div class="grp-studio-opt sel" onclick="grpSelStudio(this,'all')">All</div>
+          <div class="grp-studio-opt" onclick="grpSelStudio(this,'tb')">Beats</div>
+          <div class="grp-studio-opt" onclick="grpSelStudio(this,'vs')">Video</div>
+          <div class="grp-studio-opt" onclick="grpSelStudio(this,'ds')">Code</div>
+        </div>
+      </div>
+      <div class="grp-field"><label class="grp-label">Visibility</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem">
+          <div class="grp-studio-opt sel" id="grp-vis-private" onclick="grpSelVis('private',this)">Private</div>
+          <div class="grp-studio-opt" id="grp-vis-public" onclick="grpSelVis('public',this)">Public</div>
+        </div>
+      </div>
+    </div>
+    <div class="grp-modal-footer">
+      <button class="grp-cancel" onclick="closeCreateGroupModal()">Cancel</button>
+      <button class="grp-submit" id="grp-create-btn" onclick="submitCreateGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="grp-modal" id="add-task-modal">
+  <div class="grp-modal-box">
+    <div class="grp-modal-hd">
+      <span class="grp-modal-title">Add Task</span>
+      <button class="grp-modal-close" onclick="document.getElementById('add-task-modal').classList.remove('open')">&#10005;</button>
+    </div>
+    <div class="grp-modal-body">
+      <div class="grp-field"><label class="grp-label">Task title *</label><input class="grp-input" id="task-title-inp" type="text" placeholder="What needs to be done?" maxlength="80"></div>
+      <div class="grp-field"><label class="grp-label">Description</label><input class="grp-input" id="task-desc-inp" type="text" placeholder="More detail..." maxlength="200"></div>
+      <div class="grp-field"><label class="grp-label">Priority</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem">
+          <div class="grp-studio-opt" id="task-pri-low" onclick="grpSelPriority('low',this)">Low</div>
+          <div class="grp-studio-opt sel" id="task-pri-medium" onclick="grpSelPriority('medium',this)">Medium</div>
+          <div class="grp-studio-opt" id="task-pri-high" onclick="grpSelPriority('high',this)">High</div>
+        </div>
+      </div>
+      <div class="grp-field"><label class="grp-label">Due date</label><input class="grp-input" id="task-due-inp" type="date"></div>
+    </div>
+    <div class="grp-modal-footer">
+      <button class="grp-cancel" onclick="document.getElementById('add-task-modal').classList.remove('open')">Cancel</button>
+      <button class="grp-submit" onclick="submitAddTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div class="grp-modal" id="invite-modal">
+  <div class="grp-modal-box" style="max-width:400px">
+    <div class="grp-modal-hd">
+      <span class="grp-modal-title">Invite to Group</span>
+      <button class="grp-modal-close" onclick="document.getElementById('invite-modal').classList.remove('open')">&#10005;</button>
+    </div>
+    <div class="grp-modal-body">
+      <div class="grp-invite-box"><span class="grp-invite-code" id="invite-code-display">------</span><button class="grp-copy-btn" onclick="grpCopyCode()">Copy</button></div>
+      <div style="font-family:var(--mono);font-size:10px;color:rgba(200,200,220,.35);margin-bottom:.75rem">Share this code to invite anyone.</div>
+      <div class="grp-field"><label class="grp-label">Or invite by email</label>
+        <div style="display:flex;gap:.4rem">
+          <input class="grp-input" id="invite-email-inp" type="email" placeholder="friend@email.com" style="flex:1">
+          <button class="grp-submit" onclick="grpInviteByEmail()">Invite</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
